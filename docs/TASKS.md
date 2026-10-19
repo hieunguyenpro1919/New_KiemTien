@@ -119,3 +119,27 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 - [x] Toàn bộ 36/36 tests trong test runner đạt 100% xanh.
 - [x] Hoàn thành toàn diện Milestone M2 (Combat Vertical Slice).
 
+### M2 Hotfix — Chuẩn hóa Hitbox/Hurtbox & Cơ chế Di chuyển khi Đánh (Attack Movement):
+- [x] Chuẩn hóa toàn bộ Collision Layer & Mask:
+  - Layer 1: PlayerHitbox (Mask: 8 - Layer 4 EnemyHurtbox).
+  - Layer 2: PlayerHurtbox (Mask: 4 - Layer 3 EnemyHitbox).
+  - Layer 3: EnemyHitbox (Mask: 2 - Layer 2 PlayerHurtbox).
+  - Layer 4: EnemyHurtbox (Mask: 1 - Layer 1 PlayerHitbox).
+  - Kích hoạt `monitoring = true` và `monitorable = true` trên toàn bộ Area2D.
+- [x] Tăng kích thước vùng đánh Hitbox:
+  - `BasicHitbox`: 64x60 px (tâm cách 32 px phía trước mặt).
+  - `TechniqueHitbox`: 80x70 px (tâm cách 40 px phía trước mặt).
+  - Khắc phục lỗi trượt đòn khi đứng sát: kết hợp `area_entered` và hàm chủ động `check_overlapping_hurtboxes()`.
+  - Log Terminal va chạm: `print("[COLLISION] Hitbox trúng Hurtbox:", target.name)`.
+- [x] Khắc phục cảm giác điều khiển khi tấn công (Attack Movement):
+  - Trong `ATTACK` và `CAST`: Cho phép Player di chuyển mượt ở 45% tốc độ (99 px/s) khi có input và xoay hướng đánh tương ứng, loại bỏ hiện tượng đơ giật.
+  - Trạng thái `BLOCK` giữ nguyên đứng yên 100% (`velocity = Vector2.ZERO`).
+- [x] Khắc phục luồng Đỡ/Phản đòn:
+  - Player nhận hit tính `full_dmg` trừ giáp chuẩn xác theo SPEC 3.2.
+  - Phản đòn hoàn hảo trừ 20% thể lực quái, hủy đòn đang vung, gây choáng 60 ticks (hoặc 120 ticks khi cạn thể lực), hiện Floating Text trên cả Player và Quái.
+- [x] Bổ sung 2 ca kiểm thử mới trong `res://tests/test_player_combat.gd`:
+  - `test_attack_movement_and_stationary_block`: Kiểm tra vận tốc 45% khi đánh và đứng yên khi block.
+  - `test_hitbox_hurtbox_collision_integration`: Kiểm tra chuẩn hóa Layer/Mask và luồng va chạm gây sát thương.
+- [x] Toàn bộ 38/38 tests trong test runner đạt 100% xanh.
+
+

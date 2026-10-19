@@ -46,6 +46,25 @@ var stamina_regen_delay_ticks: int = 120
 
 func _ready() -> void:
 	add_to_group("enemies")
+	if hurtbox == null:
+		hurtbox = get_node_or_null("Hurtbox")
+	if hitbox_pivot == null:
+		hitbox_pivot = get_node_or_null("HitboxPivot")
+	if attack_hitbox == null:
+		attack_hitbox = get_node_or_null("HitboxPivot/AttackHitbox")
+	if attack_visual == null:
+		attack_visual = get_node_or_null("HitboxPivot/AttackHitbox/AttackVisual")
+	if body_visual == null:
+		body_visual = get_node_or_null("BodyVisual")
+	if title_label == null:
+		title_label = get_node_or_null("UI/TitleLabel")
+	if hp_bar == null:
+		hp_bar = get_node_or_null("UI/HPBar")
+	if stamina_bar == null:
+		stamina_bar = get_node_or_null("UI/StaminaBar")
+		
+	if stats == null:
+		stats = get_node_or_null("Stats")
 	if stats == null:
 		stats = Stats.new()
 		stats.name = "Stats"
@@ -64,6 +83,7 @@ func _ready() -> void:
 	
 	if hurtbox != null:
 		hurtbox.hit_received.connect(_on_hurtbox_hit_received)
+
 		
 	if target_player == null and is_inside_tree() and get_tree() != null:
 		target_player = get_tree().get_first_node_in_group("player")
@@ -186,18 +206,20 @@ func _start_active() -> void:
 	
 	if attack_hitbox != null:
 		attack_hitbox.init_attack(attack_id_counter, raw, full, self)
-		attack_hitbox.monitoring = true
-		attack_hitbox.monitorable = true
 		attack_hitbox.visible = true
+		attack_hitbox.check_overlapping_hurtboxes()
 	if attack_visual != null:
 		attack_visual.size = atk.hitbox_size
 		attack_visual.position = Vector2(0, -atk.hitbox_size.y * 0.5)
 
 func handle_active_state() -> void:
 	velocity = Vector2.ZERO
+	if attack_hitbox != null and attack_hitbox.is_active:
+		attack_hitbox.check_overlapping_hurtboxes()
 	attack_timer -= 1
 	if attack_timer <= 0:
 		_start_recovery()
+
 
 func _start_recovery() -> void:
 	var atk: AttackData = _get_current_attack()
@@ -248,12 +270,17 @@ func apply_parry_stun(stamina_drain: float, stun_ticks: int) -> void:
 	# Hủy đòn đang vung
 	_disable_hitbox()
 	
+	if is_inside_tree() and get_parent() != null:
+		FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -28), "-%d Thể Lực" % int(stamina_drain), Color(0.9, 0.8, 0.2))
+	
 	if stun_immunity_timer > 0:
 		return
 		
 	if stats.current_stamina <= 0.0:
 		is_stamina_broken = true
 		stun_timer = maxi(stun_timer, stamina_break_stun_ticks)
+		if is_inside_tree() and get_parent() != null:
+			FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -44), "CẠN THỂ LỰC (Choáng 2s)", Color(1.0, 0.3, 0.3), true)
 	else:
 		stun_timer = maxi(stun_timer, stun_ticks)
 		
@@ -304,8 +331,7 @@ func _update_facing(dir: Vector2) -> void:
 
 func _disable_hitbox() -> void:
 	if attack_hitbox != null:
-		attack_hitbox.monitoring = false
-		attack_hitbox.monitorable = false
+		attack_hitbox.deactivate()
 		attack_hitbox.visible = false
 
 func _update_ui_bars() -> void:

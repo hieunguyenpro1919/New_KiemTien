@@ -64,6 +64,23 @@ var current_attack_id: int = 0
 
 func _ready() -> void:
 	add_to_group("player")
+	if basic_hitbox == null:
+		basic_hitbox = get_node_or_null("HitboxPivot/BasicHitbox")
+	if technique_hitbox == null:
+		technique_hitbox = get_node_or_null("HitboxPivot/TechniqueHitbox")
+	if hurtbox == null:
+		hurtbox = get_node_or_null("Hurtbox")
+	if hitbox_pivot == null:
+		hitbox_pivot = get_node_or_null("HitboxPivot")
+	if facing_marker == null:
+		facing_marker = get_node_or_null("FacingMarker")
+	if body_visual == null:
+		body_visual = get_node_or_null("BodyVisual")
+	if shield_visual == null:
+		shield_visual = get_node_or_null("ShieldVisual")
+		
+	if stats == null:
+		stats = get_node_or_null("Stats")
 	if stats == null:
 		stats = Stats.new()
 		stats.name = "Stats"
@@ -72,16 +89,34 @@ func _ready() -> void:
 		stats.defense = 50.0
 		add_child(stats)
 	_disable_all_hitboxes()
+	_update_facing_nodes()
 	if shield_visual != null:
 		shield_visual.visible = false
 	if hurtbox != null:
 		hurtbox.hit_received.connect(_on_hurtbox_hit_received)
 
+
 func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
-	var result = receive_hit(hitbox.raw_damage, hitbox.full_damage, current_physics_tick)
+	var enemy_stamina = 100.0
+	if hitbox.attacker != null and "stats" in hitbox.attacker and hitbox.attacker.stats != null:
+		enemy_stamina = hitbox.attacker.stats.max_stamina
+		
+	var full_calc = DamageResolver.compute_damage(
+		hitbox.raw_damage,
+		0.0,
+		1.0,
+		0.0,
+		false,
+		0.5,
+		stats.defense
+	)
+	var full_dmg = full_calc.final
+	
+	var result = receive_hit(hitbox.raw_damage, full_dmg, current_physics_tick, enemy_stamina)
 	if result.type == DamageResolver.BlockResultType.PERFECT_PARRY:
 		if hitbox.attacker != null and hitbox.attacker.has_method("apply_parry_stun"):
 			hitbox.attacker.apply_parry_stun(result.stamina_damage, result.stun_ticks)
+
 
 func _physics_process(_delta: float) -> void:
 	current_physics_tick += 1
@@ -194,18 +229,35 @@ func try_basic_attack() -> bool:
 		return false
 		
 	current_state = State.ATTACK
-	velocity = Vector2.ZERO
 	attack_phase = AttackPhase.WINDUP
 	attack_phase_timer = basic_windup_ticks
 	attack_id_counter += 1
 	current_attack_id = attack_id_counter
 	_disable_all_hitboxes()
+	
+	var input_vec = get_movement_input()
+	if input_vec != Vector2.ZERO:
+		velocity = input_vec * (move_speed * 0.45)
+		facing_direction = input_vec
+		_update_facing_nodes()
+	else:
+		velocity = Vector2.ZERO
 	return true
 
 ## Xử lý các pha của đòn cơ bản
 func handle_attack_state() -> void:
-	velocity = Vector2.ZERO
+	var input_vec = get_movement_input()
+	if input_vec != Vector2.ZERO:
+		velocity = input_vec * (move_speed * 0.45)
+		facing_direction = input_vec
+		_update_facing_nodes()
+	else:
+		velocity = Vector2.ZERO
+		
 	attack_phase_timer -= 1
+	if attack_phase == AttackPhase.ACTIVE and basic_hitbox != null:
+		basic_hitbox.check_overlapping_hurtboxes()
+		
 	if attack_phase_timer <= 0:
 		match attack_phase:
 			AttackPhase.WINDUP:
@@ -228,19 +280,36 @@ func try_technique_attack() -> bool:
 		return false
 		
 	current_state = State.CAST
-	velocity = Vector2.ZERO
 	technique_cooldown_timer = cast_cooldown_ticks
 	attack_phase = AttackPhase.WINDUP
 	attack_phase_timer = cast_windup_ticks
 	attack_id_counter += 1
 	current_attack_id = attack_id_counter
 	_disable_all_hitboxes()
+	
+	var input_vec = get_movement_input()
+	if input_vec != Vector2.ZERO:
+		velocity = input_vec * (move_speed * 0.45)
+		facing_direction = input_vec
+		_update_facing_nodes()
+	else:
+		velocity = Vector2.ZERO
 	return true
 
 ## Xử lý các pha của công pháp
 func handle_cast_state() -> void:
-	velocity = Vector2.ZERO
+	var input_vec = get_movement_input()
+	if input_vec != Vector2.ZERO:
+		velocity = input_vec * (move_speed * 0.45)
+		facing_direction = input_vec
+		_update_facing_nodes()
+	else:
+		velocity = Vector2.ZERO
+		
 	attack_phase_timer -= 1
+	if attack_phase == AttackPhase.ACTIVE and technique_hitbox != null:
+		technique_hitbox.check_overlapping_hurtboxes()
+		
 	if attack_phase_timer <= 0:
 		match attack_phase:
 			AttackPhase.WINDUP:
@@ -260,9 +329,8 @@ func _enable_basic_hitbox() -> void:
 		var raw = stats.atk_base + stats.atk_bonus # coef = 1.0
 		var full = int(raw)
 		basic_hitbox.init_attack(current_attack_id, raw, full, self)
-		basic_hitbox.monitoring = true
-		basic_hitbox.monitorable = true
 		basic_hitbox.visible = true
+		basic_hitbox.check_overlapping_hurtboxes()
 
 func _enable_technique_hitbox() -> void:
 	if technique_hitbox != null:
@@ -270,18 +338,15 @@ func _enable_technique_hitbox() -> void:
 		var raw = base * float(technique_level) * (1.0 + technique_bonus_pct) # 100 * 3 * 2 = 600
 		var full = int(raw)
 		technique_hitbox.init_attack(current_attack_id, raw, full, self)
-		technique_hitbox.monitoring = true
-		technique_hitbox.monitorable = true
 		technique_hitbox.visible = true
+		technique_hitbox.check_overlapping_hurtboxes()
 
 func _disable_all_hitboxes() -> void:
 	if basic_hitbox != null:
-		basic_hitbox.monitoring = false
-		basic_hitbox.monitorable = false
+		basic_hitbox.deactivate()
 		basic_hitbox.visible = false
 	if technique_hitbox != null:
-		technique_hitbox.monitoring = false
-		technique_hitbox.monitorable = false
+		technique_hitbox.deactivate()
 		technique_hitbox.visible = false
 
 ## Nhận đòn từ bên ngoài (gọi từ Hurtbox hoặc hệ thống chiến đấu)

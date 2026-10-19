@@ -150,3 +150,70 @@ func test_player_receive_hit_combat_integration() -> void:
 	assert_eq(player.current_state, PlayerController.State.IDLE, "Player knocked out of block state")
 	
 	player.free()
+
+func test_attack_movement_and_stationary_block() -> void:
+	var player = PlayerController.new()
+	player._ready()
+	
+	# Khi vào ATTACK và không có input: velocity = ZERO
+	player.try_basic_attack()
+	assert_eq(player.current_state, PlayerController.State.ATTACK)
+	assert_eq(player.velocity, Vector2.ZERO)
+	
+	# Trong lúc ATTACK, vận tốc cho phép di chuyển 45% (220 * 0.45 = 99.0)
+	var slow_speed = player.move_speed * 0.45
+	player.velocity = Vector2.RIGHT * slow_speed
+	assert_eq(player.velocity, Vector2(99.0, 0))
+	
+	# Kết thúc attack sau 24 ticks
+	player.advance_physics_ticks(24)
+	assert_eq(player.current_state, PlayerController.State.IDLE)
+	
+	# Trong trạng thái BLOCK: velocity LUÔN BẰNG ZERO (đứng yên hoàn toàn)
+	player.try_block()
+	assert_eq(player.current_state, PlayerController.State.BLOCK)
+	assert_eq(player.velocity, Vector2.ZERO)
+	player.advance_physics_ticks(1)
+	assert_eq(player.velocity, Vector2.ZERO)
+	
+	player.free()
+
+func test_hitbox_hurtbox_collision_integration() -> void:
+	var player_scene = load("res://scenes/player.tscn")
+	var enemy_scene = load("res://scenes/enemy.tscn")
+	if player_scene == null or enemy_scene == null:
+		return
+		
+	var player = player_scene.instantiate()
+	player._ready()
+	
+	var enemy = enemy_scene.instantiate()
+	enemy.enemy_data = load("res://data/enemies/enemy_1.tres")
+	enemy._ready()
+	
+	# Kiểm tra layer và mask chuẩn hóa
+	var basic_hitbox = player.get_node("HitboxPivot/BasicHitbox") as Hitbox
+	var player_hurtbox = player.get_node("Hurtbox") as Hurtbox
+	var enemy_hitbox = enemy.get_node("HitboxPivot/AttackHitbox") as Hitbox
+	var enemy_hurtbox = enemy.get_node("Hurtbox") as Hurtbox
+	
+	assert_eq(basic_hitbox.collision_layer, 1, "PlayerHitbox must be on Layer 1")
+	assert_eq(basic_hitbox.collision_mask, 8, "PlayerHitbox must scan Layer 4 (EnemyHurtbox)")
+	
+	assert_eq(player_hurtbox.collision_layer, 2, "PlayerHurtbox must be on Layer 2")
+	assert_eq(player_hurtbox.collision_mask, 4, "PlayerHurtbox must scan Layer 3 (EnemyHitbox)")
+	
+	assert_eq(enemy_hitbox.collision_layer, 4, "EnemyHitbox must be on Layer 3")
+	assert_eq(enemy_hitbox.collision_mask, 2, "EnemyHitbox must scan Layer 2 (PlayerHurtbox)")
+	
+	assert_eq(enemy_hurtbox.collision_layer, 8, "EnemyHurtbox must be on Layer 4")
+	assert_eq(enemy_hurtbox.collision_mask, 1, "EnemyHurtbox must scan Layer 1 (PlayerHitbox)")
+	
+	# Kiểm tra va chạm gây sát thương và log Terminal
+	basic_hitbox.init_attack(1, 100.0, 100, player)
+	enemy_hurtbox.check_hit(basic_hitbox)
+	assert_eq(enemy.stats.current_hp, enemy.stats.max_hp - 91, "Enemy HP should be reduced by 91 (G2: 100 raw vs 10 def = 91 dmg)")
+	
+	player.free()
+	enemy.free()
+

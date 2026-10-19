@@ -140,3 +140,29 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
   - Tệp kịch bản [tests/replay/combat_scenario_01.json](file:///d:/App_Data/Godot_v4.7.2-stable_win64.exe/project/kiem-tien/tests/replay/combat_scenario_01.json).
   - [res://tests/test_determinism.gd](file:///d:/App_Data/Godot_v4.7.2-stable_win64.exe/project/kiem-tien/tests/test_determinism.gd) kiểm chứng 2 lượt mô phỏng độc lập cùng seed 12345 qua 180 ticks cho ra nhật ký sự kiện, máu, thể lực, trạng thái trùng khớp 100%.
   - *Kết quả test:* 36/36 tests passed (100% xanh). Hoàn thành toàn diện Milestone M2.
+
+---
+
+## 7. Quyết định M2 Hotfix — Chuẩn hóa Hitbox/Hurtbox & Cảm giác Điều khiển (Attack Movement)
+
+- **Chuẩn hóa phân tầng Collision Layers & Masks:**
+  - Layer 1: `PlayerHitbox` (Mask: Layer 4 — `EnemyHurtbox`).
+  - Layer 2: `PlayerHurtbox` (Mask: Layer 3 — `EnemyHitbox`).
+  - Layer 3: `EnemyHitbox` (Mask: Layer 2 — `PlayerHurtbox`).
+  - Layer 4: `EnemyHurtbox` (Mask: Layer 1 — `PlayerHitbox`).
+  - Cơ chế này cô lập hoàn toàn va chạm chiến đấu khỏi va chạm vật lý bản đồ (Walls, CharacterBodies), loại bỏ 100% nguy cơ tự va chạm hoặc phát hiện sai đối tượng.
+
+- **Kích thước & Cơ chế Quét va chạm 2 chiều (Zero Miss):**
+  - Kích thước `BasicHitbox` tăng lên 64x60 px (tâm cách nhân vật 32 px), `TechniqueHitbox` tăng lên 80x70 px (tâm cách 40 px) bao trọn phía trước hướng mặt.
+  - Cơ chế quét kép: vừa bắt sự kiện `area_entered`, vừa gọi chủ động `check_overlapping_hurtboxes()` ngay khi chuyển sang pha `ACTIVE`. Điều này khắc phục triệt để lỗi Godot bỏ lỡ va chạm khi 2 vùng đã đè lên nhau từ trước khi vung đòn.
+  - Thêm log Terminal theo dõi va chạm: `print("[COLLISION] Hitbox trúng Hurtbox:", target.name)`.
+
+- **Cải thiện độ mượt di chuyển khi đánh (Attack Movement):**
+  - Trong trạng thái `ATTACK` và `CAST`: Nếu người chơi có bấm phím di chuyển, cho phép di chuyển ở 45% tốc độ tối đa (99 px/s) và cập nhật hướng mặt, tạo cảm giác lướt chém uyển chuyển thay vì đơ cứng nhân vật. Nếu không bấm phím thì vận tốc bằng `Vector2.ZERO`.
+  - Trạng thái `BLOCK` (phím L) duy trì đứng yên 100% (`velocity = Vector2.ZERO`).
+
+- **Hoàn thiện chuỗi phản hồi Đỡ/Phản đòn:**
+  - Player tính sát thương nhận `full_dmg` sau khi trừ giáp chuẩn xác theo SPEC 3.2.
+  - Phản đòn hoàn hảo (`PERFECT_PARRY`) trừ 20% thể lực quái, lập tức hủy đòn quái đang vung, gây choáng 60 ticks (hoặc 120 ticks nếu cạn thể lực), sinh nhãn nổi `Đỡ Hoàn Hảo!` trên người chơi và `-20 Thể Lực` trên quái vật.
+  - *Kết quả test:* 38/38 tests passed (100% xanh).
+
