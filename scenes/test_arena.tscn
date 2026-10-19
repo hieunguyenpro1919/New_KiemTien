@@ -80,13 +80,13 @@ position = Vector2(640, 360)
 [node name="Panel" type="Panel" parent="UI"]
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 520.0
-offset_bottom = 120.0
+offset_right = 620.0
+offset_bottom = 140.0
 
 [node name="InfoLabel" type="Label" parent="UI"]
 offset_left = 26.0
 offset_top = 22.0
-offset_right = 510.0
-offset_bottom = 114.0
+offset_right = 610.0
+offset_bottom = 134.0
 theme_override_font_sizes/font_size = 14
 text = "Đang khởi tạo đấu trường mẫu..."

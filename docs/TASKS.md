@@ -10,7 +10,7 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 - [x] **Milestone M1 — Di chuyển 8 hướng & Đấu trường mẫu** (Hoàn thành)
 - [ ] **Milestone M2 — Combat vertical slice** (Đang thực hiện)
   - [x] **M2.1: Bộ giải quyết sát thương (DamageResolver) & Bộ ca kiểm thử vàng** (Hoàn thành)
-  - [ ] **M2.2: Đòn cơ bản, công pháp, hitbox/hurtbox** (Chưa bắt đầu)
+  - [x] **M2.2: Hệ thống Đòn đánh của Player và Cơ chế Đỡ/Phản trực quan** (Hoàn thành)
   - [ ] **M2.3: Quái 1, quái 2 & SimpleAI** (Chưa bắt đầu)
   - [ ] **M2.4: Đỡ, phản đòn, choáng & thể lực** (Chưa bắt đầu)
   - [ ] **M2.5: Bảng debug F3 & UI máu/danh hiệu** (Chưa bắt đầu)
@@ -61,3 +61,18 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 - [x] Viết `res://tests/test_damage.gd`: Đầy đủ toàn bộ ca kiểm thử vàng G1–G12 từ SPEC 6.1, khớp 100% số kỳ vọng.
 - [x] Viết `res://tests/test_block.gd`: Đầy đủ toàn bộ ca kiểm thử vàng B1–B6 từ SPEC 6.2, khớp 100% số kỳ vọng.
 - [x] Chạy kiểm thử tự động với `res://tests/run_tests.gd`: Đạt 26/26 tests passed (100% xanh).
+
+### M2.2 — Hệ thống Đòn đánh của Player và Cơ chế Đỡ/Phản trực quan:
+- [x] Tạo component `res://scripts/combat/stats.gd` (`Stats`) quản lý HP, stamina, atk_base, atk_bonus, defense, signal `hp_changed`, `stamina_changed`, `died`.
+- [x] Tạo component `res://scripts/combat/hitbox.gd` (`Hitbox`) với cơ chế `attack_id` và `hit_registry` chặn sát thương lặp.
+- [x] Tạo component `res://scripts/combat/hurtbox.gd` (`Hurtbox`) tiếp nhận va chạm từ Hitbox.
+- [x] Cập nhật `PlayerController`:
+  - Tích hợp `Stats` (máu 1000, atk 100, def 50 theo SPEC 5.1).
+  - Mở rộng State Machine: `IDLE`, `MOVE`, `ATTACK`, `CAST`, `BLOCK`.
+  - Đòn cơ bản (J): Coef 1.0, 3 pha (windup 6, active 6, recovery 12 ticks), sinh `attack_id` riêng.
+  - Công pháp (K): Cấp 3, `skill_bonus_pct = 1.0`, hồi 120 ticks, mở rộng hitbox về phía trước.
+  - Đỡ đòn (L): Đỡ 24 ticks, hồi 18 ticks, ghi lại `press_tick`, hiển thị `ShieldVisual`.
+  - Tích hợp hàm `receive_hit` kết nối trực tiếp với `DamageResolver.evaluate_block`.
+- [x] Cập nhật scene `res://scenes/player.tscn` và HUD trong `res://scenes/test_arena.tscn`.
+- [x] Viết test suite `res://tests/test_player_combat.gd` kiểm tra toàn bộ luồng đòn đánh, hồi chiêu, đỡ đòn và tính toán sát thương.
+- [x] Kiểm thử tự động đạt 31/31 tests passed (100% xanh).

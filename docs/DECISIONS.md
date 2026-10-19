@@ -73,3 +73,21 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
     - `raw <= threshold` và `7 <= delta <= 24`: Đỡ sớm (`EARLY_BLOCK`), nhận `round(full_damage * 0.5)`, không trừ thể lực, không choáng.
     - Ngoài thời gian đỡ (`delta < 0` hoặc `delta > 24` hoặc không bấm): Nhận đủ sát thương (`NO_BLOCK`).
   - *Kết quả test:* Toàn bộ ca kiểm thử vàng B1–B6 trong `res://tests/test_block.gd` khớp 100% với số kỳ vọng trong SPEC.
+
+---
+
+## 4. Quyết định M2.2 — Đòn đánh của Player và Cơ chế Đỡ/Phản trực quan
+
+- **Component Stats (`res://scripts/combat/stats.gd`):**
+  - Quản lý máu, thể lực, phòng thủ, tấn công cơ bản và cộng thêm.
+  - Phát tín hiệu `hp_changed`, `stamina_changed`, `died`.
+  - Người chơi khởi tạo: máu 1.000, tấn công cơ bản 100, phòng thủ 50, thể lực 100 (theo SPEC 5.1).
+
+- **Máy trạng thái chiến đấu của Player (`PlayerController`):**
+  - Mở rộng State: `IDLE`, `MOVE`, `ATTACK`, `CAST`, `BLOCK`.
+  - Toàn bộ đếm giờ tính bằng **physics ticks** (Quy tắc 4 AGENT_RULES):
+    - Đòn cơ bản (J): Windup 6 ticks, Active 6 ticks, Recovery 12 ticks (tổng 24 ticks). Sinh `attack_id` riêng biệt cho mỗi lần vung, quản lý `hit_registry` chặn sát thương lặp.
+    - Công pháp (K): Cấp 3, `skill_bonus_pct = 1.0`, `cooldown_ticks = 120` ticks (2s), Windup 10 ticks, Active 8 ticks, Recovery 12 ticks. Hitbox mở rộng theo hướng nhìn.
+    - Đỡ đòn (L): `block_active_ticks = 24` ticks (0.4s), hồi chiêu `block_cooldown_ticks = 18` ticks (0.3s). Không di chuyển trong lúc đỡ. Hiển thị hiệu ứng thị giác `ShieldVisual` và đổi màu nhân vật.
+  - Kết nối hàm `receive_hit` trực tiếp với `DamageResolver.evaluate_block` và `stats.take_damage`.
+  - *Kết quả test:* `res://tests/test_player_combat.gd` đạt 5/5 test pass, tổng toàn dự án 31/31 test pass (100% xanh).

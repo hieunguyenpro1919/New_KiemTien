@@ -1,9 +1,18 @@
-[gd_scene format=3 uid="uid://cx6y8v2qf7l1"]
+[gd_scene load_steps=8 format=3 uid="uid://cx6y8v2qf7l1"]
 
 [ext_resource type="Script" path="res://scripts/actors/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/combat/stats.gd" id="2_stats"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="3_hitbox"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="4_hurtbox"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 16.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_basic"]
+size = Vector2(32, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tech"]
+size = Vector2(50, 40)
 
 [node name="Player" type="CharacterBody2D"]
 motion_mode = 1
@@ -11,6 +20,15 @@ script = ExtResource("1_player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("2_stats")
+max_hp = 1000
+current_hp = 1000
+atk_base = 100.0
+defense = 50.0
+max_stamina = 100.0
+current_stamina = 100.0
 
 [node name="BodyVisual" type="ColorRect" parent="."]
 anchors_preset = 8
@@ -25,6 +43,37 @@ offset_bottom = 16.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.7, 0.9, 1)
+
+[node name="ShieldVisual" type="Node2D" parent="."]
+visible = false
+
+[node name="ShieldBorderTop" type="ColorRect" parent="ShieldVisual"]
+offset_left = -22.0
+offset_top = -22.0
+offset_right = 22.0
+offset_bottom = -18.0
+color = Color(1, 0.85, 0.2, 0.9)
+
+[node name="ShieldBorderBottom" type="ColorRect" parent="ShieldVisual"]
+offset_left = -22.0
+offset_top = 18.0
+offset_right = 22.0
+offset_bottom = 22.0
+color = Color(1, 0.85, 0.2, 0.9)
+
+[node name="ShieldBorderLeft" type="ColorRect" parent="ShieldVisual"]
+offset_left = -22.0
+offset_top = -22.0
+offset_right = -18.0
+offset_bottom = 22.0
+color = Color(1, 0.85, 0.2, 0.9)
+
+[node name="ShieldBorderRight" type="ColorRect" parent="ShieldVisual"]
+offset_left = 18.0
+offset_top = -22.0
+offset_right = 22.0
+offset_bottom = 22.0
+color = Color(1, 0.85, 0.2, 0.9)
 
 [node name="FacingMarker" type="Node2D" parent="."]
 position = Vector2(0, 24)
@@ -42,3 +91,43 @@ offset_bottom = 4.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 0.85, 0.2, 1)
+
+[node name="HitboxPivot" type="Node2D" parent="."]
+
+[node name="BasicHitbox" type="Area2D" parent="HitboxPivot"]
+visible = false
+monitoring = false
+script = ExtResource("3_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxPivot/BasicHitbox"]
+position = Vector2(24, 0)
+shape = SubResource("RectangleShape2D_basic")
+
+[node name="SlashVisual" type="ColorRect" parent="HitboxPivot/BasicHitbox"]
+offset_left = 8.0
+offset_top = -14.0
+offset_right = 40.0
+offset_bottom = 14.0
+color = Color(0.98, 0.75, 0.14, 0.6)
+
+[node name="TechniqueHitbox" type="Area2D" parent="HitboxPivot"]
+visible = false
+monitoring = false
+script = ExtResource("3_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxPivot/TechniqueHitbox"]
+position = Vector2(35, 0)
+shape = SubResource("RectangleShape2D_tech")
+
+[node name="CastVisual" type="ColorRect" parent="HitboxPivot/TechniqueHitbox"]
+offset_left = 10.0
+offset_top = -20.0
+offset_right = 60.0
+offset_bottom = 20.0
+color = Color(0.22, 0.74, 0.97, 0.7)
+
+[node name="Hurtbox" type="Area2D" parent="."]
+script = ExtResource("4_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CircleShape2D_1")
