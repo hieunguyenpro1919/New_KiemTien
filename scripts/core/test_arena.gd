@@ -28,9 +28,4 @@ func _process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset_scene"):
-		if player != null:
-			player.position = Vector2(640, 360)
-			player.velocity = Vector2.ZERO
-			player.current_state = PlayerController.State.IDLE
-			if player.stats != null:
-				player.stats.reset()
+		get_tree().reload_current_scene()

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://b23f81ka0m8e"]
+
+[ext_resource type="Script" path="res://scripts/data/attack_data.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+name = "Normal Attack"
+coef = 1.0
+windup_ticks = 30
+active_ticks = 6
+recovery_ticks = 30
+attack_range = 60.0
+hitbox_size = Vector2(40, 40)
+is_heavy = false

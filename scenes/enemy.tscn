@@ -1,0 +1,103 @@
+[gd_scene load_steps=9 format=3 uid="uid://b5m3n8x7p1aa"]
+
+[ext_resource type="Script" path="res://scripts/actors/enemy_controller.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/combat/stats.gd" id="2_stats"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="3_hitbox"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="4_hurtbox"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 16.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_atk"]
+size = Vector2(40, 40)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp"]
+bg_color = Color(0.85, 0.15, 0.15, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stm"]
+bg_color = Color(0.95, 0.8, 0.1, 1)
+
+[node name="Enemy" type="CharacterBody2D"]
+motion_mode = 1
+script = ExtResource("1_enemy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("2_stats")
+
+[node name="BodyVisual" type="ColorRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.7, 0.2, 0.2, 1)
+
+[node name="HitboxPivot" type="Node2D" parent="."]
+
+[node name="AttackHitbox" type="Area2D" parent="HitboxPivot"]
+visible = false
+monitoring = false
+script = ExtResource("3_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxPivot/AttackHitbox"]
+position = Vector2(30, 0)
+shape = SubResource("RectangleShape2D_atk")
+
+[node name="AttackVisual" type="ColorRect" parent="HitboxPivot/AttackHitbox"]
+offset_left = 10.0
+offset_top = -20.0
+offset_right = 50.0
+offset_bottom = 20.0
+color = Color(0.9, 0.1, 0.1, 0.5)
+
+[node name="Hurtbox" type="Area2D" parent="."]
+script = ExtResource("4_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CircleShape2D_1")
+
+[node name="UI" type="Node2D" parent="."]
+position = Vector2(0, -32)
+
+[node name="TitleLabel" type="Label" parent="UI"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -20.0
+offset_right = 80.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+text = "[Danh hiệu thử 1]"
+horizontal_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="UI"]
+offset_left = -24.0
+offset_top = 4.0
+offset_right = 24.0
+offset_bottom = 9.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp")
+value = 100.0
+show_percentage = false
+
+[node name="StaminaBar" type="ProgressBar" parent="UI"]
+offset_left = -24.0
+offset_top = 10.0
+offset_right = 24.0
+offset_bottom = 13.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_stm")
+value = 100.0
+show_percentage = false

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3 uid="uid://d3m8n7v11a4c"]
+
+[ext_resource type="Script" path="res://scripts/data/attack_data.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+name = "Heavy Attack"
+coef = 2.5
+windup_ticks = 48
+active_ticks = 6
+recovery_ticks = 45
+attack_range = 75.0
+hitbox_size = Vector2(55, 55)
+is_heavy = true

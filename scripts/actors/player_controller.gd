@@ -60,7 +60,10 @@ var current_attack_id: int = 0
 @onready var basic_hitbox: Hitbox = get_node_or_null("HitboxPivot/BasicHitbox")
 @onready var technique_hitbox: Hitbox = get_node_or_null("HitboxPivot/TechniqueHitbox")
 
+@onready var hurtbox: Hurtbox = get_node_or_null("Hurtbox")
+
 func _ready() -> void:
+	add_to_group("player")
 	if stats == null:
 		stats = Stats.new()
 		stats.name = "Stats"
@@ -71,6 +74,14 @@ func _ready() -> void:
 	_disable_all_hitboxes()
 	if shield_visual != null:
 		shield_visual.visible = false
+	if hurtbox != null:
+		hurtbox.hit_received.connect(_on_hurtbox_hit_received)
+
+func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
+	var result = receive_hit(hitbox.raw_damage, hitbox.full_damage, current_physics_tick)
+	if result.type == DamageResolver.BlockResultType.PERFECT_PARRY:
+		if hitbox.attacker != null and hitbox.attacker.has_method("apply_parry_stun"):
+			hitbox.attacker.apply_parry_stun(result.stamina_damage, result.stun_ticks)
 
 func _physics_process(_delta: float) -> void:
 	current_physics_tick += 1
@@ -250,6 +261,7 @@ func _enable_basic_hitbox() -> void:
 		var full = int(raw)
 		basic_hitbox.init_attack(current_attack_id, raw, full, self)
 		basic_hitbox.monitoring = true
+		basic_hitbox.monitorable = true
 		basic_hitbox.visible = true
 
 func _enable_technique_hitbox() -> void:
@@ -259,14 +271,17 @@ func _enable_technique_hitbox() -> void:
 		var full = int(raw)
 		technique_hitbox.init_attack(current_attack_id, raw, full, self)
 		technique_hitbox.monitoring = true
+		technique_hitbox.monitorable = true
 		technique_hitbox.visible = true
 
 func _disable_all_hitboxes() -> void:
 	if basic_hitbox != null:
 		basic_hitbox.monitoring = false
+		basic_hitbox.monitorable = false
 		basic_hitbox.visible = false
 	if technique_hitbox != null:
 		technique_hitbox.monitoring = false
+		technique_hitbox.monitorable = false
 		technique_hitbox.visible = false
 
 ## Nhận đòn từ bên ngoài (gọi từ Hurtbox hoặc hệ thống chiến đấu)

@@ -1,7 +1,10 @@
-[gd_scene format=3 uid="uid://c8m4qp2y61a2"]
+[gd_scene load_steps=8 format=3 uid="uid://c8m4qp2y61a2"]
 
 [ext_resource type="Script" path="res://scripts/core/test_arena.gd" id="1_arena"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="Resource" path="res://data/enemies/enemy_1.tres" id="4_enemy1_data"]
+[ext_resource type="Resource" path="res://data/enemies/enemy_2.tres" id="5_enemy2_data"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1280, 40)
@@ -74,6 +77,14 @@ color = Color(0.24, 0.32, 0.44, 1)
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(640, 360)
+
+[node name="Enemy1" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(240, 360)
+enemy_data = ExtResource("4_enemy1_data")
+
+[node name="Enemy2" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(1040, 360)
+enemy_data = ExtResource("5_enemy2_data")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

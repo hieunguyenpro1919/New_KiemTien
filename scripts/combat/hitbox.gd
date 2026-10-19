@@ -8,6 +8,10 @@ extends Area2D
 var attacker: Node = null
 var hit_registry: Dictionary = {}
 
+func _ready() -> void:
+	monitoring = false
+	monitorable = false
+
 func init_attack(p_attack_id: int, p_raw: float, p_full: int, p_attacker: Node) -> void:
 	attack_id = p_attack_id
 	raw_damage = p_raw
@@ -17,7 +21,11 @@ func init_attack(p_attack_id: int, p_raw: float, p_full: int, p_attacker: Node) 
 
 ## Kiểm tra xem mục tiêu đã bị trúng đòn này chưa
 func can_hit(target: Node) -> bool:
+	if attacker == null or target == null:
+		return false
 	if target == attacker:
+		return false
+	if not monitoring and not monitorable:
 		return false
 	if hit_registry.has(target):
 		return false

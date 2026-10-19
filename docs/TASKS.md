@@ -11,9 +11,9 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 - [ ] **Milestone M2 — Combat vertical slice** (Đang thực hiện)
   - [x] **M2.1: Bộ giải quyết sát thương (DamageResolver) & Bộ ca kiểm thử vàng** (Hoàn thành)
   - [x] **M2.2: Hệ thống Đòn đánh của Player và Cơ chế Đỡ/Phản trực quan** (Hoàn thành)
-  - [ ] **M2.3: Quái 1, quái 2 & SimpleAI** (Chưa bắt đầu)
-  - [ ] **M2.4: Đỡ, phản đòn, choáng & thể lực** (Chưa bắt đầu)
-  - [ ] **M2.5: Bảng debug F3 & UI máu/danh hiệu** (Chưa bắt đầu)
+  - [x] **M2.3: Hệ thống AI Quái vật (Quái 1, Quái 2) và Vòng lặp Đối kháng hoàn chỉnh** (Hoàn thành)
+  - [x] **M2.4: Đỡ, phản đòn, choáng & thể lực** (Đã tích hợp trong M2.2 & M2.3)
+  - [ ] **M2.5: Bảng debug F3 & UI máu/danh hiệu chi tiết** (Chưa bắt đầu)
   - [ ] **M2.6: Kịch bản phát lại (replay)** (Chưa bắt đầu)
 - [ ] **Milestone M2b — Ngộ Đạo tối thiểu** (Chưa bắt đầu)
 - [ ] **Milestone M3 trở đi** (Để sau khi M2 qua cổng chơi thử)
@@ -76,3 +76,22 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 - [x] Cập nhật scene `res://scenes/player.tscn` và HUD trong `res://scenes/test_arena.tscn`.
 - [x] Viết test suite `res://tests/test_player_combat.gd` kiểm tra toàn bộ luồng đòn đánh, hồi chiêu, đỡ đòn và tính toán sát thương.
 - [x] Kiểm thử tự động đạt 31/31 tests passed (100% xanh).
+
+### M2.3 — Hệ thống AI Quái vật (Quái 1, Quái 2) và Vòng lặp Đối kháng hoàn chỉnh:
+- [x] Tạo resource `res://scripts/data/attack_data.gd` và `res://scripts/data/enemy_data.gd`.
+- [x] Tạo các file `.tres`:
+  - `data/attacks/normal_attack.tres` (coef 1.0, windup 30, active 6, recovery 30 ticks).
+  - `data/attacks/heavy_attack.tres` (coef 2.5, windup 48, active 6, recovery 45 ticks).
+  - `data/enemies/enemy_1.tres`: Danh hiệu `[Danh hiệu thử 1]`, Máu 300, Def 10, Speed 160 px/s.
+  - `data/enemies/enemy_2.tres`: Danh hiệu `[Danh hiệu thử 2]`, Máu 3000, Def 100, Speed 200 px/s, chu kỳ: thường, thường, nặng.
+- [x] Xây dựng `res://scripts/actors/enemy_controller.gd` và `res://scenes/enemy.tscn`:
+  - SimpleAI State Machine: `IDLE`, `CHASE` (tầm 300px), `WINDUP`, `ACTIVE`, `RECOVERY`, `STUNNED`.
+  - Vùng đánh khóa hướng ở windup, không bám theo player.
+  - Cơ chế thể lực & choáng: trừ 20% khi player đỡ hoàn hảo, choáng 60 ticks. Cạn thể lực choáng 120 ticks, hồi 50% và miễn choáng 60 ticks.
+  - UI lơ lửng: Danh hiệu (không hiện cấp/số máu), thanh ProgressBar máu và thể lực.
+- [x] Cập nhật `res://scenes/test_arena.tscn`: đặt Quái 1 và Quái 2 ở hai góc đối diện, phím R reload lại toàn bộ scene.
+- [x] Viết test suite `res://tests/test_enemy_ai.gd`:
+  - Kiểm tra phát hiện (300px) và bỏ đuổi (600px).
+  - Kiểm tra chu kỳ đòn của Quái 2 (thường, thường, nặng).
+  - Kiểm tra ca kiểm thử vàng B7 (5 lần đỡ hoàn hảo liên tiếp cạn thể lực, choáng 120 tick, hồi 50% thể lực và miễn choáng 60 tick).
+- [x] Toàn bộ test runner đạt 34/34 tests passed (100% xanh).

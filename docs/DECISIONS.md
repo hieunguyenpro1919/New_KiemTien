@@ -91,3 +91,33 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
     - Đỡ đòn (L): `block_active_ticks = 24` ticks (0.4s), hồi chiêu `block_cooldown_ticks = 18` ticks (0.3s). Không di chuyển trong lúc đỡ. Hiển thị hiệu ứng thị giác `ShieldVisual` và đổi màu nhân vật.
   - Kết nối hàm `receive_hit` trực tiếp với `DamageResolver.evaluate_block` và `stats.take_damage`.
   - *Kết quả test:* `res://tests/test_player_combat.gd` đạt 5/5 test pass, tổng toàn dự án 31/31 test pass (100% xanh).
+
+---
+
+## 5. Quyết định M2.3 — Hệ thống AI Quái vật (Quái 1, Quái 2) và Vòng lặp Đối kháng
+
+- **Tài nguyên dữ liệu quái & đòn đánh:**
+  - `AttackData` (`res://scripts/data/attack_data.gd`): Lưu coef, windup, active, recovery, range, hitbox_size.
+    - `normal_attack.tres`: coef 1.0, windup 30, active 6, recovery 30 ticks.
+    - `heavy_attack.tres`: coef 2.5, windup 48, active 6, recovery 45 ticks (đòn nặng của Quái 2).
+  - `EnemyData` (`res://scripts/data/enemy_data.gd`):
+    - `enemy_1.tres`: Danh hiệu `[Danh hiệu thử 1]`, Máu 300, Def 10, Speed 160 px/s, chu kỳ 1 đòn thường (raw 40).
+    - `enemy_2.tres`: Danh hiệu `[Danh hiệu thử 2]`, Máu 3000, Def 100, Speed 200 px/s, chu kỳ đòn: Thường (raw 400), Thường (raw 400), Nặng (raw 1000).
+
+- **Máy trạng thái AI (SimpleAI State Machine):**
+  - Trạng thái: `IDLE`, `CHASE`, `WINDUP`, `ACTIVE`, `RECOVERY`, `STUNNED`.
+  - Phát hiện người chơi trong tầm 300px (`detect_range`), bỏ đuổi khi vượt 600px (`leash_range`).
+  - Vùng đánh khóa hướng lúc bắt đầu pha báo hiệu, không bám theo người chơi (SPEC 3.5).
+  - Báo hiệu thị giác: đổi màu khi windup đòn thường/đòn nặng.
+
+- **Cơ chế thể lực & choáng (SPEC 3.4 & Ca kiểm thử vàng B7):**
+  - Thể lực tối đa 100.
+  - Bị đỡ hoàn hảo: trừ 20% thể lực (-20), choáng 60 ticks (`perfect_parry_stun_ticks`), hủy đòn đang vung.
+  - Cạn thể lực (về 0): choáng 120 ticks (`stamina_break_stun_ticks`).
+  - Sau khi hết choáng cạn thể lực: hồi lại 50% thể lực (50) và nhận 60 ticks miễn nhiễm choáng (`stun_immunity_ticks`).
+  - Hồi thể lực tự nhiên: 10/giây sau 120 ticks không bị trừ.
+
+- **Giao diện lơ lửng trên đầu (UI Floating):**
+  - Danh hiệu: `[Danh hiệu thử 1]` và `[Danh hiệu thử 2]`. Tuyệt đối không hiển thị cấp số hay số máu theo Bất biến số 9 của SPEC.
+  - Thanh máu (`HPBar`) và thanh thể lực (`StaminaBar`) co giãn theo tỉ lệ.
+  - *Kết quả test:* `res://tests/test_enemy_ai.gd` đạt 3/3 test pass (gồm ca vàng B7), tổng toàn dự án 34/34 test pass (100% xanh).
