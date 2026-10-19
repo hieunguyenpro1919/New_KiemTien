@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CombatConfig" format=3 uid="uid://c18v4gaa1ab0"]
+
+[ext_resource type="Script" path="res://scripts/data/combat_config.gd" id="1_config"]
+
+[resource]
+script = ExtResource("1_config")
+tick_rate = 60
+level_coef_mode = "linear"
+parry_coef_mode = "linear"
+perfect_window_ticks = 6
+block_active_ticks = 24
+block_cooldown_ticks = 18
+early_block_reduction = 0.5
+perfect_parry_damage_reduction = 1.0
+failed_block_damage_pct = 1.0
+parry_stamina_drain_pct = 0.2
+perfect_parry_stun_ticks = 60
+stamina_break_stun_ticks = 120
+stamina_after_break_pct = 0.5
+stun_immunity_ticks = 60
+stamina_regen_per_sec = 10.0
+stamina_regen_delay_ticks = 120
+player_crit_rate = 0.1
+player_crit_bonus = 0.5
+damage_cap = 99999999
+rng_seed = 12345
+combat_gain = 1
+cultivate_gain_per_sec = 1
+pulse_interval_s = 15.0
+pulse_window_s = 3.0
+session_cap = 300
+cost_base = 30.0
+cost_growth = 1.35

@@ -44,3 +44,32 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
 - **Đấu trường mẫu (`test_arena.tscn`):**
   - *Bố cục:* Kích thước chuẩn 1280x720, gồm sàn đấu, vạch ranh giới, 4 cạnh tường va chạm tĩnh (`StaticBody2D` + `CollisionShape2D`), nhân vật người chơi và panel UI hiển thị thông tin thời gian thực.
   - *Main Scene:* Đặt làm cảnh mặc định `run/main_scene="res://scenes/test_arena.tscn"`.
+
+---
+
+## 3. Quyết định M2.1 — Bộ giải quyết sát thương (DamageResolver) & Bộ ca kiểm thử vàng
+
+- **Tài nguyên cấu hình (`res://scripts/data/combat_config.gd` & `res://data/combat_config.tres`):**
+  - *Giá trị:* Đầy đủ 25 tham số cấu hình quy định tại SPEC mục 5.2.
+  - *Lý do:* Đảm bảo quy tắc số 2 của AGENT_RULES ("Mọi giá trị số nằm trong CombatConfig/.tres. Không viết cứng").
+  - *Kết quả:* Nạp tài nguyên thành công, kiểm chứng trong các test suite.
+
+- **Đặc tả tính sát thương (`DamageResolver.compute_damage`):**
+  - *Cơ chế:* Hàm static thuần, không trạng thái ẩn, nhận `is_crit` làm tham số đầu vào rõ ràng. Thực hiện tuần tự 7 bước chuẩn:
+    1. `base = atk_base + atk_bonus`
+    2. `coef = level_coef(level)`
+    3. `skill = base * coef * (1 + skill_bonus_pct)`
+    4. `raw = skill * (1 + crit_bonus)` nếu crit, ngược lại `raw = skill`
+    5. Giảm trừ: `def_eff = max(0, defense * (1 - armor_pen_pct) - armor_pen_flat)`, `mitigation = base / (base + def_eff)`, `dmg = raw * mitigation`
+    6. Làm tròn nửa lên: `clamp(round(dmg), 1, 99999999)` nếu `raw > 0` và `base > 0`, ngược lại trả 0 kèm lỗi log.
+    7. Trần sát thương `99.999.999`.
+  - *Kết quả test:* Toàn bộ ca kiểm thử vàng G1–G12 trong `res://tests/test_damage.gd` khớp 100% với số kỳ vọng trong SPEC.
+
+- **Đặc tả đỡ đòn & phản đòn (`DamageResolver.evaluate_block`):**
+  - *Ngưỡng đỡ:* `compute_block_threshold(...) = (Phòng thủ + Tấn công) * level_coef(cấp)`.
+  - *Cơ chế phân định:*
+    - `raw > threshold`: Đỡ bị phá (`BLOCK_BROKEN`), nhận đủ sát thương, không trừ thể lực, không choáng.
+    - `raw <= threshold` và `0 <= delta <= 6`: Đỡ hoàn hảo (`PERFECT_PARRY`), nhận 0 sát thương, trừ 20% thể lực tối đa của địch, địch choáng 60 tick, hủy đòn vung của địch.
+    - `raw <= threshold` và `7 <= delta <= 24`: Đỡ sớm (`EARLY_BLOCK`), nhận `round(full_damage * 0.5)`, không trừ thể lực, không choáng.
+    - Ngoài thời gian đỡ (`delta < 0` hoặc `delta > 24` hoặc không bấm): Nhận đủ sát thương (`NO_BLOCK`).
+  - *Kết quả test:* Toàn bộ ca kiểm thử vàng B1–B6 trong `res://tests/test_block.gd` khớp 100% với số kỳ vọng trong SPEC.

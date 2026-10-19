@@ -8,7 +8,13 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 
 - [x] **Milestone M0 — Thiết lập hạ tầng** (Hoàn thành)
 - [x] **Milestone M1 — Di chuyển 8 hướng & Đấu trường mẫu** (Hoàn thành)
-- [ ] **Milestone M2 — Combat vertical slice** (Chưa bắt đầu)
+- [ ] **Milestone M2 — Combat vertical slice** (Đang thực hiện)
+  - [x] **M2.1: Bộ giải quyết sát thương (DamageResolver) & Bộ ca kiểm thử vàng** (Hoàn thành)
+  - [ ] **M2.2: Đòn cơ bản, công pháp, hitbox/hurtbox** (Chưa bắt đầu)
+  - [ ] **M2.3: Quái 1, quái 2 & SimpleAI** (Chưa bắt đầu)
+  - [ ] **M2.4: Đỡ, phản đòn, choáng & thể lực** (Chưa bắt đầu)
+  - [ ] **M2.5: Bảng debug F3 & UI máu/danh hiệu** (Chưa bắt đầu)
+  - [ ] **M2.6: Kịch bản phát lại (replay)** (Chưa bắt đầu)
 - [ ] **Milestone M2b — Ngộ Đạo tối thiểu** (Chưa bắt đầu)
 - [ ] **Milestone M3 trở đi** (Để sau khi M2 qua cổng chơi thử)
 
@@ -44,3 +50,14 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 - [x] Đặt `res://scenes/test_arena.tscn` làm Main Scene mặc định trong `project.godot`.
 - [x] Bộ kiểm thử tự động `res://tests/test_player_controller.gd` gồm 4 ca kiểm thử chuyên sâu về vận tốc, chuẩn hóa đường chéo, chuyển trạng thái và bảo toàn hướng nhìn.
 - [x] Đăng ký global class cache cho engine và kiểm tra chạy scene không lỗi (`godot --headless --quit-after 30`).
+
+### M2.1 — Bộ giải quyết sát thương (DamageResolver) & Bộ ca kiểm thử vàng:
+- [x] Tạo Resource `res://scripts/data/combat_config.gd` và file dữ liệu `res://data/combat_config.tres` chứa 25 tham số cấu hình chuẩn theo SPEC 5.2.
+- [x] Tạo `res://scripts/combat/damage_resolver.gd`:
+  - Toàn bộ hàm static thuần, không phụ thuộc Scene/Node, không ẩn RNG.
+  - `compute_damage(...)`: Luồng 7 bước chuẩn từ SPEC 3.2, làm tròn nửa lên, trần 99.999.999, giáp & xuyên giáp.
+  - `compute_block_threshold(...)`: Theo SPEC 3.3.
+  - `evaluate_block(...)`: Phân định đỡ hoàn hảo (delta 0..6), đỡ sớm (delta 7..24), đỡ bị phá (raw > threshold), và không đỡ/đỡ muộn.
+- [x] Viết `res://tests/test_damage.gd`: Đầy đủ toàn bộ ca kiểm thử vàng G1–G12 từ SPEC 6.1, khớp 100% số kỳ vọng.
+- [x] Viết `res://tests/test_block.gd`: Đầy đủ toàn bộ ca kiểm thử vàng B1–B6 từ SPEC 6.2, khớp 100% số kỳ vọng.
+- [x] Chạy kiểm thử tự động với `res://tests/run_tests.gd`: Đạt 26/26 tests passed (100% xanh).
