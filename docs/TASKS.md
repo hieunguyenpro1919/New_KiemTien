@@ -8,13 +8,11 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
 
 - [x] **Milestone M0 — Thiết lập hạ tầng** (Hoàn thành)
 - [x] **Milestone M1 — Di chuyển 8 hướng & Đấu trường mẫu** (Hoàn thành)
-- [ ] **Milestone M2 — Combat vertical slice** (Đang thực hiện)
+- [x] **Milestone M2 — Combat vertical slice** (Hoàn thành)
   - [x] **M2.1: Bộ giải quyết sát thương (DamageResolver) & Bộ ca kiểm thử vàng** (Hoàn thành)
   - [x] **M2.2: Hệ thống Đòn đánh của Player và Cơ chế Đỡ/Phản trực quan** (Hoàn thành)
   - [x] **M2.3: Hệ thống AI Quái vật (Quái 1, Quái 2) và Vòng lặp Đối kháng hoàn chỉnh** (Hoàn thành)
-  - [x] **M2.4: Đỡ, phản đòn, choáng & thể lực** (Đã tích hợp trong M2.2 & M2.3)
-  - [ ] **M2.5: Bảng debug F3 & UI máu/danh hiệu chi tiết** (Chưa bắt đầu)
-  - [ ] **M2.6: Kịch bản phát lại (replay)** (Chưa bắt đầu)
+  - [x] **M2.4: Bảng debug F3, Số sát thương nổi & Kịch bản kiểm chứng tính xác định** (Hoàn thành)
 - [ ] **Milestone M2b — Ngộ Đạo tối thiểu** (Chưa bắt đầu)
 - [ ] **Milestone M3 trở đi** (Để sau khi M2 qua cổng chơi thử)
 
@@ -95,3 +93,29 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
   - Kiểm tra chu kỳ đòn của Quái 2 (thường, thường, nặng).
   - Kiểm tra ca kiểm thử vàng B7 (5 lần đỡ hoàn hảo liên tiếp cạn thể lực, choáng 120 tick, hồi 50% thể lực và miễn choáng 60 tick).
 - [x] Toàn bộ test runner đạt 34/34 tests passed (100% xanh).
+
+### M2.4 — Bảng Debug (F3), Số sát thương nổi & Kịch bản kiểm chứng tính xác định:
+- [x] Hệ thống Số sát thương nổi (Floating Combat Text):
+  - Tạo `res://scripts/ui/floating_number.gd` và `res://scenes/ui/floating_number.tscn`.
+  - Hiệu ứng bay lên 45-65 px/s, mờ dần sau 40 ticks và tự dọn bộ nhớ.
+  - Tích hợp vào `PlayerController.gd` và `EnemyController.gd`:
+    - Màu trắng cho đòn đánh thường.
+    - Màu vàng cam cho đòn chí mạng / đòn nặng / công pháp.
+    - Màu xanh lam / xám khi đỡ đòn thành công.
+    - Dòng chữ vàng "Đỡ Hoàn Hảo!" khi parry thành công.
+- [x] Bảng Debug F3 (`res://scenes/ui/debug_panel.tscn` & `res://scripts/ui/debug_panel.gd`):
+  - Mặc định ẩn, bật/tắt bằng phím F3 (`debug_toggle`).
+  - Dòng cảnh báo bắt buộc theo SPEC 3.6: `=== CHỈ ĐỂ PHÁT TRIỂN / DEBUG ONLY ===`.
+  - Hiển thị theo thời gian thực:
+    - Player: Máu thật / Max, Thể lực thật, Trạng thái (State), Tick hồi chiêu công pháp và đỡ đòn, Vị trí.
+    - Quái vật: Tọa độ, Thể lực thật, Máu thật, Trạng thái AI (IDLE, CHASE, WINDUP, ACTIVE, RECOVERY, STUNNED), số lần miễn choáng còn lại.
+  - Tích hợp trực tiếp vào CanvasLayer UI của `res://scenes/test_arena.tscn`.
+- [x] Kịch bản kiểm chứng tính xác định (SPEC 6.4):
+  - Tạo kịch bản sự kiện `res://tests/replay/combat_scenario_01.json` gồm 180 ticks mô phỏng đối kháng hoàn chỉnh.
+  - Viết `res://tests/test_determinism.gd`:
+    - Chạy 2 lượt mô phỏng độc lập với cùng 1 chuỗi hành động và RNG seed (12345).
+    - So sánh và kiểm chứng rằng cả 2 lượt chạy cho ra nhật ký sự kiện, máu, thể lực, trạng thái trùng khớp 100% từng con số.
+    - Kiểm chứng tính xác định của luồng tung xúc xắc sát thương RNG.
+- [x] Toàn bộ 36/36 tests trong test runner đạt 100% xanh.
+- [x] Hoàn thành toàn diện Milestone M2 (Combat Vertical Slice).
+

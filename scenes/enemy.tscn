@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://b5m3n8x7p1aa"]
+[gd_scene format=3 uid="uid://b5m3n8x7p1aa"]
 
 [ext_resource type="Script" path="res://scripts/actors/enemy_controller.gd" id="1_enemy"]
 [ext_resource type="Script" path="res://scripts/combat/stats.gd" id="2_stats"]

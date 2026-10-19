@@ -1,0 +1,15 @@
+{
+  "scenario_name": "combat_scenario_01",
+  "seed": 12345,
+  "total_ticks": 180,
+  "timeline": [
+    { "tick": 1, "action": "move_right", "type": "press" },
+    { "tick": 20, "action": "move_right", "type": "release" },
+    { "tick": 30, "action": "attack_basic", "type": "press" },
+    { "tick": 31, "action": "attack_basic", "type": "release" },
+    { "tick": 70, "action": "attack_technique", "type": "press" },
+    { "tick": 71, "action": "attack_technique", "type": "release" },
+    { "tick": 110, "action": "block", "type": "press" },
+    { "tick": 134, "action": "block", "type": "release" }
+  ]
+}

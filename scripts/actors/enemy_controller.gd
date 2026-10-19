@@ -45,6 +45,7 @@ var stamina_regen_delay_ticks: int = 120
 @onready var stamina_bar: ProgressBar = get_node_or_null("UI/StaminaBar")
 
 func _ready() -> void:
+	add_to_group("enemies")
 	if stats == null:
 		stats = Stats.new()
 		stats.name = "Stats"
@@ -276,7 +277,12 @@ func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
 		0.5,
 		stats.defense
 	)
-	stats.take_damage(res.final)
+	var actual_dmg = stats.take_damage(res.final)
+	if is_inside_tree() and get_parent() != null and actual_dmg > 0:
+		var is_crit = (hitbox.raw_damage > 500.0) # Công pháp hoặc chí mạng
+		var col = Color(1.0, 0.85, 0.2) if is_crit else Color.WHITE
+		FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -28), "-%d" % actual_dmg, col, is_crit)
+		
 	if stats.is_dead:
 		_die()
 

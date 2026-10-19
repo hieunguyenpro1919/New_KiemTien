@@ -294,6 +294,16 @@ func receive_hit(raw_dmg: float, full_dmg: int, impact_tick: int, enemy_max_stam
 	var eval: Dictionary = DamageResolver.evaluate_block(raw_dmg, full_dmg, threshold, delta, is_blocking, enemy_max_stamina)
 	
 	stats.take_damage(eval.damage_taken)
+	
+	# Hiển thị số sát thương nổi
+	if is_inside_tree() and get_parent() != null:
+		if eval.type == DamageResolver.BlockResultType.PERFECT_PARRY:
+			FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -24), "Đỡ Hoàn Hảo!", Color(1.0, 0.85, 0.2), true)
+		elif eval.type == DamageResolver.BlockResultType.EARLY_BLOCK:
+			FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -24), "-%d (Đỡ)" % eval.damage_taken, Color(0.4, 0.8, 1.0))
+		elif eval.damage_taken > 0:
+			FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -24), "-%d" % eval.damage_taken, Color(1.0, 0.4, 0.4))
+			
 	if eval.type == DamageResolver.BlockResultType.BLOCK_BROKEN:
 		if current_state == State.BLOCK:
 			_end_block()

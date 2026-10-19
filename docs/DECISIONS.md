@@ -121,3 +121,22 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
   - Danh hiệu: `[Danh hiệu thử 1]` và `[Danh hiệu thử 2]`. Tuyệt đối không hiển thị cấp số hay số máu theo Bất biến số 9 của SPEC.
   - Thanh máu (`HPBar`) và thanh thể lực (`StaminaBar`) co giãn theo tỉ lệ.
   - *Kết quả test:* `res://tests/test_enemy_ai.gd` đạt 3/3 test pass (gồm ca vàng B7), tổng toàn dự án 34/34 test pass (100% xanh).
+
+---
+
+## 6. Quyết định M2.4 — Bảng Debug (F3), Số sát thương nổi & Tính xác định
+
+- **Số sát thương nổi (`res://scenes/ui/floating_number.tscn` & `res://scripts/ui/floating_number.gd`):**
+  - Tự động sinh khi bất kỳ thực thể nào nhận sát thương > 0 hoặc đỡ đòn.
+  - Bay lên 45-65 px/s và mờ dần trong 40 ticks, tự giải phóng bộ nhớ (`queue_free`).
+  - Màu sắc: Trắng cho đòn thường, Vàng cam cho đòn chí mạng/công pháp mạnh, Xanh lam cho sát thương bị đỡ, Vàng nổi bật cho "Đỡ Hoàn Hảo!".
+
+- **Bảng Debug F3 (`res://scenes/ui/debug_panel.tscn` & `res://scripts/ui/debug_panel.gd`):**
+  - Mặc định ẩn, bật/tắt khi nhấn F3 (`debug_toggle`).
+  - Dòng cảnh báo bắt buộc: `=== CHỈ ĐỂ PHÁT TRIỂN / DEBUG ONLY ===` theo mục 3.6 SPEC.
+  - Hiển thị đầy đủ số thật theo thời gian thực: Máu thật, Thể lực thật, Tọa độ, State, Cooldown công pháp & đỡ đòn, AI State của từng quái và thời gian miễn choáng.
+
+- **Kiểm chứng tính xác định (SPEC mục 6.4):**
+  - Tệp kịch bản [tests/replay/combat_scenario_01.json](file:///d:/App_Data/Godot_v4.7.2-stable_win64.exe/project/kiem-tien/tests/replay/combat_scenario_01.json).
+  - [res://tests/test_determinism.gd](file:///d:/App_Data/Godot_v4.7.2-stable_win64.exe/project/kiem-tien/tests/test_determinism.gd) kiểm chứng 2 lượt mô phỏng độc lập cùng seed 12345 qua 180 ticks cho ra nhật ký sự kiện, máu, thể lực, trạng thái trùng khớp 100%.
+  - *Kết quả test:* 36/36 tests passed (100% xanh). Hoàn thành toàn diện Milestone M2.
