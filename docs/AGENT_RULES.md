@@ -14,3 +14,4 @@ Nguồn sự thật duy nhất: docs/SPEC.md (bản PLAN chốt).
 8. Mỗi thay đổi mặc định ghi vào docs/DECISIONS.md: cũ, mới, lý do, kết quả test.
 9. Làm theo từng mốc. Không làm trước phần của mốc sau. Mỗi nhóm thay đổi có test xanh mới commit.
 10. Cuối mỗi nhiệm vụ báo: đã chạy thật gì, chưa chạy gì, lỗi đã biết.
+11. Tuân thủ nghiêm ngặt quy trình làm việc và quy chuẩn Git tại docs/WORKFLOW_AND_GIT.md. Tuyệt đối không commit bừa bãi và luôn chạy kiểm tra sạch trước khi kết thúc nhiệm vụ.
