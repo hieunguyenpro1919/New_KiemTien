@@ -11,9 +11,14 @@ enum BlockResultType {
 
 ## Tính hệ số cấp công pháp theo SPEC mục 3.2 bước 2
 static func compute_level_coef(level: int, mode: String = "linear") -> float:
-	if mode == "linear":
-		return float(maxi(1, level))
-	return float(maxi(1, level))
+	var lvl: float = float(maxi(1, level))
+	match mode:
+		"linear":
+			return lvl
+		"sqrt":
+			return sqrt(lvl)
+		_:
+			return lvl
 
 ## Tính ngưỡng đỡ đòn theo SPEC mục 3.3
 ## threshold = (Phòng thủ + Tấn công) × level_coef(cấp công pháp cao nhất đang trang bị)
@@ -99,6 +104,8 @@ static func evaluate_block(
 	var perfect_window: int = 6
 	var block_active: int = 24
 	var early_reduction: float = 0.5
+	var perfect_reduction: float = 1.0
+	var failed_block_pct: float = 1.0
 	var parry_stamina_drain: float = 0.20
 	var perfect_stun: int = 60
 	
@@ -106,6 +113,8 @@ static func evaluate_block(
 		perfect_window = config.perfect_window_ticks
 		block_active = config.block_active_ticks
 		early_reduction = config.early_block_reduction
+		perfect_reduction = config.perfect_parry_damage_reduction
+		failed_block_pct = config.failed_block_damage_pct
 		parry_stamina_drain = config.parry_stamina_drain_pct
 		perfect_stun = config.perfect_parry_stun_ticks
 		
@@ -113,7 +122,7 @@ static func evaluate_block(
 	if raw_damage > threshold:
 		return {
 			"type": BlockResultType.BLOCK_BROKEN,
-			"damage_taken": full_damage,
+			"damage_taken": int(round(float(full_damage) * failed_block_pct)),
 			"stamina_damage": 0,
 			"stun_ticks": 0,
 			"interrupt_enemy": false
@@ -123,7 +132,7 @@ static func evaluate_block(
 	if not is_blocking or delta_ticks < 0 or delta_ticks > block_active:
 		return {
 			"type": BlockResultType.NO_BLOCK,
-			"damage_taken": full_damage,
+			"damage_taken": int(round(float(full_damage) * failed_block_pct)),
 			"stamina_damage": 0,
 			"stun_ticks": 0,
 			"interrupt_enemy": false
@@ -132,9 +141,10 @@ static func evaluate_block(
 	# Quy tắc 3: delta từ 0 đến perfect_window -> Đỡ hoàn hảo
 	if delta_ticks >= 0 and delta_ticks <= perfect_window:
 		var stamina_drain_val: int = int(round(enemy_max_stamina * parry_stamina_drain))
+		var dmg_taken: int = int(round(float(full_damage) * (1.0 - perfect_reduction)))
 		return {
 			"type": BlockResultType.PERFECT_PARRY,
-			"damage_taken": 0,
+			"damage_taken": dmg_taken,
 			"stamina_damage": stamina_drain_val,
 			"stun_ticks": perfect_stun,
 			"interrupt_enemy": true
@@ -154,7 +164,7 @@ static func evaluate_block(
 	# Mặc định nhận đủ
 	return {
 		"type": BlockResultType.NO_BLOCK,
-		"damage_taken": full_damage,
+		"damage_taken": int(round(float(full_damage) * failed_block_pct)),
 		"stamina_damage": 0,
 		"stun_ticks": 0,
 		"interrupt_enemy": false

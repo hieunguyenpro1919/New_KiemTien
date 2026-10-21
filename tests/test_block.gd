@@ -120,3 +120,24 @@ func test_b6_threshold_boundaries() -> void:
 	var r451 = DamageResolver.evaluate_block(451.0, full, threshold, 3, true)
 	assert_eq(r451.type, DamageResolver.BlockResultType.BLOCK_BROKEN, "B6: raw = 451 phải bị phá đỡ")
 	assert_eq(r451.damage_taken, 356, "B6: raw = 451 nhận đủ sát thương")
+
+func test_f7_level_coef_mode_and_config_wiring() -> void:
+	# 1. Kiểm tra 2 nhánh compute_level_coef
+	assert_eq(DamageResolver.compute_level_coef(4, "linear"), 4.0, "Linear level coef for level 4 must be 4.0")
+	assert_eq(DamageResolver.compute_level_coef(4, "sqrt"), 2.0, "Sqrt level coef for level 4 must be 2.0")
+	assert_eq(DamageResolver.compute_level_coef(4, "unknown_fallback"), 4.0, "Fallback level coef must default to linear")
+	
+	# 2. Kiểm tra parry_coef_mode trong compute_block_threshold
+	var cfg = CombatConfig.new()
+	cfg.parry_coef_mode = "sqrt"
+	var th_sqrt = DamageResolver.compute_block_threshold(50.0, 100.0, 0.0, 4, cfg)
+	assert_eq(th_sqrt, 300.0, "Threshold with sqrt parry_coef_mode must be (50+100)*2 = 300.0")
+	
+	# 3. Kiểm tra biến cấu hình evaluate_block
+	cfg.failed_block_damage_pct = 0.75
+	var r_broken = DamageResolver.evaluate_block(500.0, 100, 400.0, 3, true, 100.0, cfg)
+	assert_eq(r_broken.damage_taken, 75, "Broken block must scale by failed_block_damage_pct (75)")
+	
+	cfg.perfect_parry_damage_reduction = 0.90
+	var r_parry = DamageResolver.evaluate_block(300.0, 100, 400.0, 3, true, 100.0, cfg)
+	assert_eq(r_parry.damage_taken, 10, "Perfect parry must scale by perfect_parry_damage_reduction (10)")

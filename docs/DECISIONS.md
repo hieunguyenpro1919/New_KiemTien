@@ -168,10 +168,35 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
 
 ---
 
-## 8. Quyết định Khắc phục Lỗi Kỹ thuật F1 - F4 (Claude Review)
+## 8. Quyết định Khắc phục Toàn diện Gói Lỗi Kỹ thuật F1 - F7 (Claude Review)
 
-- **Triệt tiêu số cứng trong mã nguồn (F4) & Hệ số tốc độ khi đánh (0.45):**
+- **[F1] Đồng bộ sát thương game thật với Ca kiểm thử vàng:**
+  - *Thay đổi:* Mở rộng `Hitbox` mang đầy đủ các tham số nguồn: `atk_base`, `atk_bonus`, `level_coef`, `skill_bonus_pct`, `is_crit`, `crit_bonus`, `armor_pen_pct`, `armor_pen_flat`.
+  - *Pipeline:* `PlayerController` và `EnemyController` truyền đầy đủ tham số nguồn qua `_on_hurtbox_hit_received` vào `DamageResolver.compute_damage` theo đúng công thức SPEC 3.2 (`base = atk_base + atk_bonus`).
+  - *Kết quả test:* `test_f1_physical_hitbox_damage_sync_with_golden_tests` kiểm chứng Công pháp cấp 3 vs Quái 2 = 300 (G4) và Đòn nặng Quái 2 vs Người chơi = 889 (G7).
+
+- **[F2] Tích hợp Chí mạng (RNG) thực sự vào game:**
+  - *Thay đổi:* Tích hợp `RandomNumberGenerator` vào `PlayerController` lấy seed từ `CombatConfig.rng_seed` (12345), in log khởi tạo ra console.
+  - *Cơ chế:* Tự động roll chí mạng khi ra đòn dựa trên `player_crit_rate` (10%). Hỗ trợ cờ kiểm thử `force_crit` (0: tự động roll, 1: ép bật, -1: ép tắt).
+  - *Kết quả test:* `test_f2_crit_rng_mechanic` kiểm chứng trúng đích với đòn chí mạng (136 sát thương) và không chí mạng (91 sát thương) khớp 100%.
+
+- **[F3] Nạp Resource `CombatConfig.tres` thực sự:**
+  - *Thay đổi:* Preload và fallback nạp tệp `res://data/combat_config.tres` trong cả `PlayerController` và `EnemyController`.
+  - *Loại bỏ rỗng:* Truyền đối tượng `combat_config` trực tiếp vào `DamageResolver.compute_block_threshold` và `evaluate_block`, triệt tiêu hoàn toàn việc dùng tham số mặc định rỗng bên trong logic runtime.
+
+- **[F4] Triệt tiêu số cứng trong mã nguồn & Hệ số tốc độ khi đánh (0.45):**
   - *Giá trị:* `attack_move_speed_ratio = 0.45` (45% `move_speed`, tương đương 99.0 px/s khi vận tốc cơ sở là 220 px/s).
   - *Lý do:* Tạo cảm giác lướt chém uyển chuyển trong lúc ra đòn (trạng thái `ATTACK` và `CAST`), tránh đơ cứng nhân vật khi bấm phím di chuyển, nhưng không cho phép di chuyển với tốc độ tối đa (100%) để tránh mất tính cam kết của hoạt ảnh đòn đánh.
-  - *Cấu hình hóa:* Đã chuyển toàn bộ hệ số 0.45 và các thông số thời gian đòn đánh của người chơi (`player_basic_windup_ticks = 6`, `player_basic_active_ticks = 6`, `player_basic_recovery_ticks = 12`, `player_cast_windup_ticks = 10`, `player_cast_active_ticks = 8`, `player_cast_recovery_ticks = 12`, `player_cast_cooldown_ticks = 120`) vào Resource `CombatConfig` (`combat_config.gd` và `combat_config.tres`). `PlayerController` tự động đồng bộ từ Resource cấu hình khi khởi tạo, loại bỏ triệt để số cứng trong mã nguồn theo Quy tắc 2 của `AGENT_RULES.md`.
+  - *Cấu hình hóa:* Đã chuyển toàn bộ hệ số 0.45 và các thông số thời gian đòn đánh của người chơi (`player_basic_windup_ticks = 6`, `player_basic_active_ticks = 6`, `player_basic_recovery_ticks = 12`, `player_cast_windup_ticks = 10`, `player_cast_active_ticks = 8`, `player_cast_recovery_ticks = 12`, `player_cast_cooldown_ticks = 120`) vào Resource `CombatConfig` (`combat_config.gd` và `combat_config.tres`). `PlayerController` tự động đồng bộ từ Resource cấu hình khi khởi tạo.
+
+- **[F5] Cấu hình chuẩn `project.godot`:**
+  - *Thay đổi:* Bổ sung tường minh dòng `common/physics_ticks_per_second=60` dưới mục `[physics]` trong tệp `project.godot`.
+
+- **[F6] Nâng cấp bộ ca kiểm thử tích hợp (B7 Collision & Determinism Replay):**
+  - *B7 Pipeline:* Bổ sung `test_golden_b7_via_collision_and_receive_hit_pipeline` kiểm chứng 5 lần phản đòn liên tiếp kích hoạt qua chuỗi thực tế `Hitbox -> Hurtbox -> receive_hit -> evaluate_block -> apply_parry_stun`.
+  - *Determinism Replay:* Bổ sung kịch bản `tests/replay/combat_scenario_02_parry_and_heavy.json` và test `test_determinism_scenario_02_parry_and_heavy_attack` kiểm chứng tính xác định tuyệt đối (bit-for-bit) giữa 2 lần chạy 215 ticks độc lập, có đầy đủ sự kiện Đỡ hoàn hảo (tick 31) và Đòn nặng phá vỡ đỡ đòn (tick 207, gây 889 sát thương).
+
+- **[F7] Chuẩn hóa logic trong `DamageResolver`:**
+  - *Level coef mode:* Chuẩn hóa `compute_level_coef` với lệnh `match mode:` hỗ trợ tường minh `"linear"` (trả về cấp `L`), `"sqrt"` (trả về `sqrt(L)`), và nhánh mặc định fallback `lvl`.
+  - *Đồng bộ cấu hình:* `evaluate_block` liên kết và sử dụng đầy đủ các trường cấu hình `perfect_parry_damage_reduction` (1.0) và `failed_block_damage_pct` (1.0), `parry_coef_mode` ("linear"), loại bỏ mọi biến chưa dùng và logic dư thừa.
 
