@@ -52,6 +52,12 @@ var attack_phase_timer: int = 0
 var attack_id_counter: int = 0
 var current_attack_id: int = 0
 
+## Cấu hình chiến đấu (CombatConfig)
+@export var combat_config: CombatConfig = preload("res://data/combat_config.tres")
+var combat_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Cờ ép chí mạng: 0 = tự động roll theo tỉ lệ, 1 = ép luôn chí mạng, -1 = ép không bao giờ chí mạng
+var force_crit: int = 0
+
 @onready var stats: Stats = get_node_or_null("Stats")
 @onready var facing_marker: Node2D = get_node_or_null("FacingMarker")
 @onready var body_visual: ColorRect = get_node_or_null("BodyVisual")
@@ -61,6 +67,7 @@ var current_attack_id: int = 0
 @onready var technique_hitbox: Hitbox = get_node_or_null("HitboxPivot/TechniqueHitbox")
 
 @onready var hurtbox: Hurtbox = get_node_or_null("Hurtbox")
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -88,12 +95,27 @@ func _ready() -> void:
 		stats.atk_base = 100.0
 		stats.defense = 50.0
 		add_child(stats)
+	if combat_config == null:
+		combat_config = load("res://data/combat_config.tres")
+	if combat_config != null:
+		combat_rng.seed = combat_config.rng_seed
+		print("[RNG] PlayerController khởi tạo RNG với seed: %d" % combat_config.rng_seed)
+		
 	_disable_all_hitboxes()
 	_update_facing_nodes()
 	if shield_visual != null:
 		shield_visual.visible = false
 	if hurtbox != null:
 		hurtbox.hit_received.connect(_on_hurtbox_hit_received)
+
+func _roll_crit() -> bool:
+	if force_crit == 1:
+		return true
+	elif force_crit == -1:
+		return false
+	var rate = combat_config.player_crit_rate if combat_config != null else 0.10
+	return combat_rng.randf() < rate
+
 
 
 func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
@@ -102,17 +124,20 @@ func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
 		enemy_stamina = hitbox.attacker.stats.max_stamina
 		
 	var full_calc = DamageResolver.compute_damage(
-		hitbox.raw_damage,
-		0.0,
-		1.0,
-		0.0,
-		false,
-		0.5,
-		stats.defense
+		hitbox.atk_base,
+		hitbox.atk_bonus,
+		hitbox.level_coef,
+		hitbox.skill_bonus_pct,
+		hitbox.is_crit,
+		hitbox.crit_bonus,
+		stats.defense,
+		hitbox.armor_pen_pct,
+		hitbox.armor_pen_flat
 	)
 	var full_dmg = full_calc.final
+	var raw_dmg = full_calc.raw
 	
-	var result = receive_hit(hitbox.raw_damage, full_dmg, current_physics_tick, enemy_stamina)
+	var result = receive_hit(raw_dmg, full_dmg, current_physics_tick, enemy_stamina)
 	if result.type == DamageResolver.BlockResultType.PERFECT_PARRY:
 		if hitbox.attacker != null and hitbox.attacker.has_method("apply_parry_stun"):
 			hitbox.attacker.apply_parry_stun(result.stamina_damage, result.stun_ticks)
@@ -326,20 +351,56 @@ func handle_cast_state() -> void:
 
 func _enable_basic_hitbox() -> void:
 	if basic_hitbox != null:
-		var raw = stats.atk_base + stats.atk_bonus # coef = 1.0
-		var full = int(raw)
-		basic_hitbox.init_attack(current_attack_id, raw, full, self)
+		var atk_b = stats.atk_base
+		var atk_bon = stats.atk_bonus
+		var l_coef = 1.0
+		var s_pct = 0.0
+		var crit = _roll_crit()
+		var crit_bon = combat_config.player_crit_bonus if combat_config != null else 0.5
+		var dmg_calc = DamageResolver.compute_damage(
+			atk_b, atk_bon, l_coef, s_pct, crit, crit_bon
+		)
+		basic_hitbox.init_attack(
+			current_attack_id,
+			dmg_calc.raw,
+			dmg_calc.final,
+			self,
+			atk_b,
+			atk_bon,
+			l_coef,
+			s_pct,
+			crit,
+			crit_bon
+		)
 		basic_hitbox.visible = true
 		basic_hitbox.check_overlapping_hurtboxes()
 
 func _enable_technique_hitbox() -> void:
 	if technique_hitbox != null:
-		var base = stats.atk_base + stats.atk_bonus
-		var raw = base * float(technique_level) * (1.0 + technique_bonus_pct) # 100 * 3 * 2 = 600
-		var full = int(raw)
-		technique_hitbox.init_attack(current_attack_id, raw, full, self)
+		var atk_b = stats.atk_base
+		var atk_bon = stats.atk_bonus
+		var l_coef = float(technique_level)
+		var s_pct = technique_bonus_pct
+		var crit = _roll_crit()
+		var crit_bon = combat_config.player_crit_bonus if combat_config != null else 0.5
+		var dmg_calc = DamageResolver.compute_damage(
+			atk_b, atk_bon, l_coef, s_pct, crit, crit_bon
+		)
+		technique_hitbox.init_attack(
+			current_attack_id,
+			dmg_calc.raw,
+			dmg_calc.final,
+			self,
+			atk_b,
+			atk_bon,
+			l_coef,
+			s_pct,
+			crit,
+			crit_bon
+		)
 		technique_hitbox.visible = true
 		technique_hitbox.check_overlapping_hurtboxes()
+
 
 func _disable_all_hitboxes() -> void:
 	if basic_hitbox != null:

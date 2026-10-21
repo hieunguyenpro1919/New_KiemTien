@@ -201,11 +201,26 @@ func _start_active() -> void:
 	attack_timer = atk.active_ticks
 	
 	attack_id_counter += 1
-	var raw = enemy_data.atk_base * atk.coef
-	var full = int(raw)
+	var atk_b = enemy_data.atk_base
+	var atk_bon = enemy_data.atk_bonus
+	var l_coef = atk.coef
+	var s_pct = 0.0
+	var crit = false
+	var dmg_calc = DamageResolver.compute_damage(atk_b, atk_bon, l_coef, s_pct, crit, 0.5)
 	
 	if attack_hitbox != null:
-		attack_hitbox.init_attack(attack_id_counter, raw, full, self)
+		attack_hitbox.init_attack(
+			attack_id_counter,
+			dmg_calc.raw,
+			dmg_calc.final,
+			self,
+			atk_b,
+			atk_bon,
+			l_coef,
+			s_pct,
+			crit,
+			0.5
+		)
 		attack_hitbox.visible = true
 		attack_hitbox.check_overlapping_hurtboxes()
 	if attack_visual != null:
@@ -293,25 +308,27 @@ func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
 	if stats == null or stats.is_dead:
 		return
 		
-	# Tính sát thương nhận theo DamageResolver
-	var attacker_base = hitbox.raw_damage
+	# Tính sát thương nhận theo DamageResolver đúng SPEC 3.2
 	var res = DamageResolver.compute_damage(
-		attacker_base,
-		0.0,
-		1.0,
-		0.0,
-		false,
-		0.5,
-		stats.defense
+		hitbox.atk_base,
+		hitbox.atk_bonus,
+		hitbox.level_coef,
+		hitbox.skill_bonus_pct,
+		hitbox.is_crit,
+		hitbox.crit_bonus,
+		stats.defense,
+		hitbox.armor_pen_pct,
+		hitbox.armor_pen_flat
 	)
 	var actual_dmg = stats.take_damage(res.final)
 	if is_inside_tree() and get_parent() != null and actual_dmg > 0:
-		var is_crit = (hitbox.raw_damage > 500.0) # Công pháp hoặc chí mạng
+		var is_crit = hitbox.is_crit or (hitbox.raw_damage > 500.0)
 		var col = Color(1.0, 0.85, 0.2) if is_crit else Color.WHITE
 		FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -28), "-%d" % actual_dmg, col, is_crit)
 		
 	if stats.is_dead:
 		_die()
+
 
 func _die() -> void:
 	_disable_hitbox()

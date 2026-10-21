@@ -210,10 +210,53 @@ func test_hitbox_hurtbox_collision_integration() -> void:
 	assert_eq(enemy_hurtbox.collision_mask, 1, "EnemyHurtbox must scan Layer 1 (PlayerHitbox)")
 	
 	# Kiểm tra va chạm gây sát thương và log Terminal
-	basic_hitbox.init_attack(1, 100.0, 100, player)
+	basic_hitbox.init_attack(1, 100.0, 91, player, 100.0, 0.0, 1.0, 0.0, false, 0.5)
 	enemy_hurtbox.check_hit(basic_hitbox)
 	assert_eq(enemy.stats.current_hp, enemy.stats.max_hp - 91, "Enemy HP should be reduced by 91 (G2: 100 raw vs 10 def = 91 dmg)")
 	
 	player.free()
 	enemy.free()
+
+func test_f1_physical_hitbox_damage_sync_with_golden_tests() -> void:
+	var player_scene = load("res://scenes/player.tscn")
+	var enemy_scene = load("res://scenes/enemy.tscn")
+	
+	# --- Phần 1: Công pháp cấp 3 vs Quái 2 = 300 (G4) ---
+	var player = player_scene.instantiate()
+	player.force_crit = -1 # Tắt chí mạng để khớp G4 chuẩn
+	player._ready()
+	
+	var enemy2 = enemy_scene.instantiate()
+	enemy2.enemy_data = load("res://data/enemies/enemy_2.tres")
+	enemy2._ready()
+	
+	var tech_hitbox = player.get_node("HitboxPivot/TechniqueHitbox") as Hitbox
+	var enemy2_hurtbox = enemy2.get_node("Hurtbox") as Hurtbox
+	
+	# Bật hitbox công pháp của player
+	player._enable_technique_hitbox()
+	# Gây va chạm vật lý qua Area2D
+	enemy2_hurtbox.check_hit(tech_hitbox)
+	
+	assert_eq(enemy2.stats.current_hp, 3000 - 300, "F1: Công pháp cấp 3 vs Quái 2 qua Hitbox phải nhận đúng 300 sát thương (G4)")
+	
+	# --- Phần 2: Đòn nặng Quái 2 vs Người chơi = 889 (G7) ---
+	player.stats.reset() # Máu về 1000
+	var enemy2_hitbox = enemy2.get_node("HitboxPivot/AttackHitbox") as Hitbox
+	var player_hurtbox = player.get_node("Hurtbox") as Hurtbox
+	
+	# Quái 2 ra đòn nặng (atk_base 400, coef 2.5)
+	var heavy_atk = load("res://data/attacks/heavy_attack.tres") as AttackData
+	enemy2.current_attack_index = 2 # Đòn nặng trong chu kỳ quái 2
+	enemy2._start_active()
+	
+	# Player không đỡ (IDLE), nhận đòn qua Hurtbox
+	assert_eq(player.current_state, PlayerController.State.IDLE)
+	player_hurtbox.check_hit(enemy2_hitbox)
+	
+	assert_eq(player.stats.current_hp, 1000 - 889, "F1: Đòn nặng Quái 2 vs Người chơi qua Hitbox phải nhận đúng 889 sát thương (G7)")
+	
+	player.free()
+	enemy2.free()
+
 
