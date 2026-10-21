@@ -11,7 +11,8 @@ enum State {
 }
 
 @export var enemy_data: EnemyData
-@export var combat_config: CombatConfig
+@export var combat_config: CombatConfig = preload("res://data/combat_config.tres")
+
 
 var current_state: State = State.IDLE
 var target_player: Node2D = null
@@ -70,6 +71,8 @@ func _ready() -> void:
 		stats.name = "Stats"
 		add_child(stats)
 		
+	if combat_config == null:
+		combat_config = load("res://data/combat_config.tres")
 	if combat_config != null:
 		perfect_parry_stun_ticks = combat_config.perfect_parry_stun_ticks
 		stamina_break_stun_ticks = combat_config.stamina_break_stun_ticks
@@ -77,6 +80,7 @@ func _ready() -> void:
 		stun_immunity_ticks = combat_config.stun_immunity_ticks
 		stamina_regen_per_sec = combat_config.stamina_regen_per_sec
 		stamina_regen_delay_ticks = combat_config.stamina_regen_delay_ticks
+
 
 	_apply_enemy_data()
 	_disable_hitbox()

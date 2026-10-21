@@ -413,11 +413,11 @@ func _disable_all_hitboxes() -> void:
 ## Nhận đòn từ bên ngoài (gọi từ Hurtbox hoặc hệ thống chiến đấu)
 func receive_hit(raw_dmg: float, full_dmg: int, impact_tick: int, enemy_max_stamina: float = 100.0) -> Dictionary:
 	var threshold: float = DamageResolver.compute_block_threshold(
-		stats.defense, stats.atk_base, stats.atk_bonus, technique_level
+		stats.defense, stats.atk_base, stats.atk_bonus, technique_level, combat_config
 	)
 	var is_blocking: bool = (current_state == State.BLOCK)
 	var delta: int = (impact_tick - block_press_tick) if is_blocking else -1
-	var eval: Dictionary = DamageResolver.evaluate_block(raw_dmg, full_dmg, threshold, delta, is_blocking, enemy_max_stamina)
+	var eval: Dictionary = DamageResolver.evaluate_block(raw_dmg, full_dmg, threshold, delta, is_blocking, enemy_max_stamina, combat_config)
 	
 	stats.take_damage(eval.damage_taken)
 	

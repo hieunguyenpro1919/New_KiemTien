@@ -18,6 +18,14 @@ func assert_false(condition: bool, message: String = "") -> void:
 			err_msg += " (" + message + ")"
 		_record_failure(err_msg)
 
+func assert_not_null(val, message: String = "") -> void:
+	if val == null:
+		var err_msg = "Expected value not to be null."
+		if message != "":
+			err_msg += " (" + message + ")"
+		_record_failure(err_msg)
+
+
 func assert_eq(actual, expected, message: String = "") -> void:
 	if actual != expected:
 		var err_msg = "Assertion failed: expected '%s', got '%s'." % [str(expected), str(actual)]

@@ -310,5 +310,28 @@ func test_f2_crit_rng_mechanic() -> void:
 	player2.free()
 	enemy1.free()
 
+func test_f3_combat_config_resource_loading() -> void:
+	var player = PlayerController.new()
+	player._ready()
+	assert_not_null(player.combat_config, "PlayerController must load combat_config")
+	assert_eq(player.combat_config.perfect_window_ticks, 6, "Player combat_config perfect_window_ticks must be 6")
+	
+	var enemy = EnemyController.new()
+	enemy.enemy_data = load("res://data/enemies/enemy_1.tres")
+	enemy._ready()
+	assert_not_null(enemy.combat_config, "EnemyController must load combat_config")
+	assert_eq(enemy.perfect_parry_stun_ticks, 60, "Enemy stun ticks must be loaded from config")
+	
+	# Kiểm tra evaluate_block nhận config từ player
+	player.current_physics_tick = 10
+	player.try_block()
+	# Hit tại tick 15 (delta = 5 -> trong cửa sổ 0..6 của config)
+	var eval = player.receive_hit(100.0, 91, 15, 100.0)
+	assert_eq(eval.type, DamageResolver.BlockResultType.PERFECT_PARRY, "Should evaluate PERFECT_PARRY using config perfect_window_ticks")
+	
+	player.free()
+	enemy.free()
+
+
 
 
