@@ -13,8 +13,9 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
   - [x] **M2.2: Hệ thống Đòn đánh của Player và Cơ chế Đỡ/Phản trực quan** (Hoàn thành)
   - [x] **M2.3: Hệ thống AI Quái vật (Quái 1, Quái 2) và Vòng lặp Đối kháng hoàn chỉnh** (Hoàn thành)
   - [x] **M2.4: Bảng debug F3, Số sát thương nổi & Kịch bản kiểm chứng tính xác định** (Hoàn thành)
-- [ ] **Milestone M2b — Ngộ Đạo tối thiểu** (Chưa bắt đầu)
-- [ ] **Milestone M3 trở đi** (Để sau khi M2 qua cổng chơi thử)
+  - [x] **Khắc phục toàn diện Gói lỗi kỹ thuật F1 - F7 từ Review của Claude** (Hoàn thành)
+- [ ] **Milestone M2b — Ngộ Đạo tối thiểu** (Tạm dừng theo yêu cầu, sẵn sàng tiếp tục)
+- [ ] **Milestone M3 trở đi** (Để sau khi M2/M2b qua cổng chơi thử)
 
 ---
 
@@ -141,5 +142,15 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
   - `test_attack_movement_and_stationary_block`: Kiểm tra vận tốc 45% khi đánh và đứng yên khi block.
   - `test_hitbox_hurtbox_collision_integration`: Kiểm tra chuẩn hóa Layer/Mask và luồng va chạm gây sát thương.
 - [x] Toàn bộ 38/38 tests trong test runner đạt 100% xanh.
+
+### Gói lỗi kỹ thuật F1 - F7 (Claude Review):
+- [x] [F1 - Nghiêm trọng] Đồng bộ sát thương game thật với Ca kiểm thử vàng: Hitbox mang đầy đủ `atk_base`, `atk_bonus`, `level_coef`, `skill_bonus_pct`, `is_crit`, `crit_bonus`, `armor_pen_pct`, `armor_pen_flat`. Viết test tích hợp vật lý thật đảm bảo: Công pháp cấp 3 vs Quái 2 = 300, Đòn nặng Quái 2 vs Người chơi = 889.
+- [x] [F2 - Nghiêm trọng] Tích hợp Chí mạng (RNG) thực sự vào game: Seed nạp từ `CombatConfig.rng_seed`, in log console, tỉ lệ `player_crit_rate` (10%), hỗ trợ cờ ép bật/tắt `force_crit`.
+- [x] [F3 - Quan trọng] Nạp Resource `CombatConfig.tres` thực sự vào `PlayerController` và `EnemyController`, truyền trực tiếp vào `compute_block_threshold` và `evaluate_block`.
+- [x] [F4 - Quan trọng] Triệt tiêu số cứng trong mã nguồn: Đưa attack timings và hệ số tốc độ khi đánh (0.45) vào `CombatConfig`, ghi nhận vào `docs/DECISIONS.md`.
+- [x] [F5 - Quan trọng] Cấu hình chuẩn `project.godot`: Bổ sung tường minh `common/physics_ticks_per_second=60` dưới mục `[physics]`.
+- [x] [F6 - Quan trọng] Nâng cấp bộ ca kiểm thử tích hợp: Bổ sung test B7 đi qua đường va chạm thực tế Hitbox -> Hurtbox -> receive_hit; thêm kịch bản kiểm chứng tính xác định `combat_scenario_02_parry_and_heavy.json` có đầy đủ Đỡ hoàn hảo và Đòn nặng.
+- [x] [F7 - Nhỏ] Dọn dẹp logic dư thừa trong `DamageResolver`: Chuẩn hóa 2 nhánh `level_coef_mode` ("linear", "sqrt"), liên kết các biến cấu hình `perfect_parry_damage_reduction`, `failed_block_damage_pct`.
+- [x] Toàn bộ 45/45 tests trong test runner đạt 100% xanh.
 
 
