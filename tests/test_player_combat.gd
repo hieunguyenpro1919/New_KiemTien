@@ -259,4 +259,56 @@ func test_f1_physical_hitbox_damage_sync_with_golden_tests() -> void:
 	player.free()
 	enemy2.free()
 
+func test_f2_crit_rng_mechanic() -> void:
+	var player_scene = load("res://scenes/player.tscn")
+	var enemy_scene = load("res://scenes/enemy.tscn")
+	
+	var player = player_scene.instantiate()
+	player._ready()
+	
+	var enemy1 = enemy_scene.instantiate()
+	enemy1.enemy_data = load("res://data/enemies/enemy_1.tres")
+	enemy1._ready()
+	
+	var basic_hitbox = player.get_node("HitboxPivot/BasicHitbox") as Hitbox
+	var enemy1_hurtbox = enemy1.get_node("Hurtbox") as Hurtbox
+	
+	# 1. Ép bật chí mạng (force_crit = 1):
+	# Base 100, crit +50% -> raw 150, def 10 -> mitigation 100/110 -> dmg = 136
+	player.force_crit = 1
+	player._enable_basic_hitbox()
+	assert_true(basic_hitbox.is_crit, "Hitbox must carry is_crit = true when force_crit = 1")
+	enemy1_hurtbox.check_hit(basic_hitbox)
+	assert_eq(enemy1.stats.current_hp, 300 - 136, "Enemy 1 must take 136 damage on crit basic attack")
+	
+	# 2. Ép tắt chí mạng (force_crit = -1):
+	# Base 100, non-crit -> raw 100, def 10 -> dmg = 91
+	enemy1.stats.reset()
+	player.force_crit = -1
+	player.current_attack_id += 1 # Đòn mới
+	player._enable_basic_hitbox()
+	assert_false(basic_hitbox.is_crit, "Hitbox must carry is_crit = false when force_crit = -1")
+	enemy1_hurtbox.check_hit(basic_hitbox)
+	assert_eq(enemy1.stats.current_hp, 300 - 91, "Enemy 1 must take 91 damage on non-crit basic attack")
+	
+	# 3. Kiểm tra tính xác định của combat_rng theo seed
+	player.force_crit = 0 # Trả về tự động roll
+	var rolls: Array[bool] = []
+	for i in range(20):
+		rolls.append(player._roll_crit())
+		
+	# Tạo player khác cùng seed 12345
+	var player2 = player_scene.instantiate()
+	player2._ready()
+	var rolls2: Array[bool] = []
+	for i in range(20):
+		rolls2.append(player2._roll_crit())
+		
+	assert_eq(rolls, rolls2, "Both players with seed 12345 must produce identical crit sequence")
+	
+	player.free()
+	player2.free()
+	enemy1.free()
+
+
 
