@@ -4,6 +4,10 @@ const EnemyController = preload("res://scripts/actors/enemy_controller.gd")
 const EnemyData = preload("res://scripts/data/enemy_data.gd")
 const AttackData = preload("res://scripts/data/attack_data.gd")
 const Stats = preload("res://scripts/combat/stats.gd")
+const PlayerController = preload("res://scripts/actors/player_controller.gd")
+const Hitbox = preload("res://scripts/combat/hitbox.gd")
+const Hurtbox = preload("res://scripts/combat/hurtbox.gd")
+
 
 func test_detection_and_chase() -> void:
 	var enemy = EnemyController.new()
@@ -136,3 +140,95 @@ func test_golden_b7_five_consecutive_parries_and_stamina_break() -> void:
 	assert_eq(enemy.current_state, EnemyController.State.IDLE, "Cannot be stunned during stun immunity")
 	
 	enemy.free()
+
+## Ca kiểm thử vàng B7 thông qua toàn bộ pipeline va chạm thực tế:
+## Hitbox -> Hurtbox -> receive_hit -> evaluate_block -> apply_parry_stun
+func test_golden_b7_via_collision_and_receive_hit_pipeline() -> void:
+	var player = PlayerController.new()
+	player.name = "Player"
+	player._ready()
+	
+	var enemy = EnemyController.new()
+	enemy.name = "Enemy"
+	enemy.enemy_data = load("res://data/enemies/enemy_2.tres")
+	enemy._ready()
+	
+	# Thiết lập Hitbox cho Enemy
+	var enemy_hitbox = Hitbox.new()
+	enemy_hitbox.name = "EnemyHitbox"
+	enemy.add_child(enemy_hitbox)
+	enemy.attack_hitbox = enemy_hitbox
+	
+	# Thiết lập Hurtbox cho Player
+	var player_hurtbox = Hurtbox.new()
+	player_hurtbox.name = "PlayerHurtbox"
+	player_hurtbox.owner_node = player
+	player.add_child(player_hurtbox)
+	player.hurtbox = player_hurtbox
+	player_hurtbox.hit_received.connect(player._on_hurtbox_hit_received)
+	
+	assert_almost_eq(enemy.stats.current_stamina, 100.0, 0.001, "Enemy initial stamina is 100")
+	
+	# 5 lần đỡ hoàn hảo liên tiếp
+	for i in range(5):
+		var expected_stamina = 100.0 - (i + 1) * 20.0
+		
+		# Player bắt đầu đỡ (phím L)
+		player.current_physics_tick = 100 * (i + 1)
+		player.try_block()
+		
+		# Địch tấn công trong cửa sổ hoàn hảo (delta = 2 ticks)
+		player.current_physics_tick += 2
+		enemy_hitbox.init_attack(
+			i + 1,
+			400.0,
+			356,
+			enemy,
+			enemy.enemy_data.atk_base,
+			enemy.enemy_data.atk_bonus,
+			1.0,
+			0.0,
+			false,
+			0.5
+		)
+		
+		# Kích hoạt qua đường va chạm Hurtbox thực tế
+		player_hurtbox.check_hit(enemy_hitbox)
+		
+		# Người chơi đỡ hoàn hảo không mất máu
+		assert_eq(player.stats.current_hp, 1000, "Player takes 0 damage on parry %d" % (i + 1))
+		
+		# Địch bị trừ 20% thể lực tối đa
+		assert_almost_eq(enemy.stats.current_stamina, expected_stamina, 0.001, "Parry %d: enemy stamina is %f" % [i + 1, expected_stamina])
+		
+		if i < 4:
+			assert_eq(enemy.current_state, EnemyController.State.STUNNED, "Parry %d: enemy is STUNNED" % (i + 1))
+			assert_eq(enemy.stun_timer, 60, "Parry %d: stun timer is 60 ticks" % (i + 1))
+			# Hồi phục choáng và miễn choáng để chuẩn bị cho lần đỡ kế
+			enemy.advance_physics_ticks(60 + 60)
+			assert_eq(enemy.current_state, EnemyController.State.IDLE, "Enemy recovers to IDLE")
+			# Đặt lại trạng thái người chơi về IDLE để thực hiện lần đỡ tiếp theo
+			player._end_block()
+			player.block_cooldown_timer = 0
+		else:
+			# Lần thứ 5: Cạn thể lực -> Choáng 120 ticks
+			assert_true(enemy.is_stamina_broken, "Parry 5: is_stamina_broken must be true")
+			assert_eq(enemy.stun_timer, 120, "Parry 5: stamina break causes 120 ticks stun")
+			
+			# Hết 120 ticks choáng
+			enemy.advance_physics_ticks(120)
+			assert_eq(enemy.current_state, EnemyController.State.IDLE, "Stun ends after 120 ticks")
+			assert_almost_eq(enemy.stats.current_stamina, 50.0, 0.001, "Stamina resets to 50% (50.0)")
+			assert_eq(enemy.stun_immunity_timer, 60, "Immune to new stuns for 60 ticks")
+			
+			# Thử đỡ lần 6 trong lúc miễn nhiễm choáng
+			player.current_physics_tick += 10
+			player.try_block()
+			player.current_physics_tick += 1
+			enemy_hitbox.init_attack(6, 400.0, 356, enemy, enemy.enemy_data.atk_base, enemy.enemy_data.atk_bonus, 1.0, 0.0, false, 0.5)
+			player_hurtbox.check_hit(enemy_hitbox)
+			assert_eq(enemy.current_state, EnemyController.State.IDLE, "Enemy cannot be stunned while stun immunity > 0")
+			
+	player.free()
+	enemy.free()
+

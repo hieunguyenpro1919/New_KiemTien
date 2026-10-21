@@ -286,8 +286,9 @@ func apply_parry_stun(stamina_drain: float, stun_ticks: int) -> void:
 	stats.consume_stamina(stamina_drain)
 	stamina_regen_delay_timer = stamina_regen_delay_ticks
 	
-	# Hủy đòn đang vung
+	# Hủy đòn đang vung và chuyển sang đòn kế tiếp trong chu kỳ
 	_disable_hitbox()
+	_advance_attack_cycle()
 	
 	if is_inside_tree() and get_parent() != null:
 		FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -28), "-%d Thể Lực" % int(stamina_drain), Color(0.9, 0.8, 0.2))

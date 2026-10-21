@@ -1,0 +1,14 @@
+{
+  "scenario_name": "combat_scenario_02_parry_and_heavy",
+  "seed": 12345,
+  "total_ticks": 215,
+  "player_max_hp": 2000,
+  "enemy_start_pos": [140, 100],
+  "player_start_pos": [100, 100],
+  "timeline": [
+    { "tick": 29, "action": "block", "type": "press" },
+    { "tick": 35, "action": "block", "type": "release" },
+    { "tick": 203, "action": "block", "type": "press" },
+    { "tick": 210, "action": "block", "type": "release" }
+  ]
+}
