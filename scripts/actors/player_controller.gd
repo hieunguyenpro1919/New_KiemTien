@@ -19,6 +19,9 @@ enum AttackPhase {
 ## Tốc độ di chuyển cơ bản (px/s) theo SPEC mục 5.1
 @export var move_speed: float = 220.0
 
+## Tỉ lệ vận tốc khi tấn công
+@export var attack_move_speed_ratio: float = 0.45
+
 ## Cấp công pháp mẫu (mặc định 3 theo SPEC 5.1)
 @export var technique_level: int = 3
 @export var technique_bonus_pct: float = 1.0
@@ -100,6 +103,16 @@ func _ready() -> void:
 	if combat_config != null:
 		combat_rng.seed = combat_config.rng_seed
 		print("[RNG] PlayerController khởi tạo RNG với seed: %d" % combat_config.rng_seed)
+		attack_move_speed_ratio = combat_config.attack_move_speed_ratio
+		basic_windup_ticks = combat_config.player_basic_windup_ticks
+		basic_active_ticks = combat_config.player_basic_active_ticks
+		basic_recovery_ticks = combat_config.player_basic_recovery_ticks
+		cast_windup_ticks = combat_config.player_cast_windup_ticks
+		cast_active_ticks = combat_config.player_cast_active_ticks
+		cast_recovery_ticks = combat_config.player_cast_recovery_ticks
+		cast_cooldown_ticks = combat_config.player_cast_cooldown_ticks
+		block_active_ticks = combat_config.block_active_ticks
+		block_cooldown_ticks = combat_config.block_cooldown_ticks
 		
 	_disable_all_hitboxes()
 	_update_facing_nodes()
@@ -262,7 +275,7 @@ func try_basic_attack() -> bool:
 	
 	var input_vec = get_movement_input()
 	if input_vec != Vector2.ZERO:
-		velocity = input_vec * (move_speed * 0.45)
+		velocity = input_vec * (move_speed * attack_move_speed_ratio)
 		facing_direction = input_vec
 		_update_facing_nodes()
 	else:
@@ -273,7 +286,7 @@ func try_basic_attack() -> bool:
 func handle_attack_state() -> void:
 	var input_vec = get_movement_input()
 	if input_vec != Vector2.ZERO:
-		velocity = input_vec * (move_speed * 0.45)
+		velocity = input_vec * (move_speed * attack_move_speed_ratio)
 		facing_direction = input_vec
 		_update_facing_nodes()
 	else:
@@ -314,7 +327,7 @@ func try_technique_attack() -> bool:
 	
 	var input_vec = get_movement_input()
 	if input_vec != Vector2.ZERO:
-		velocity = input_vec * (move_speed * 0.45)
+		velocity = input_vec * (move_speed * attack_move_speed_ratio)
 		facing_direction = input_vec
 		_update_facing_nodes()
 	else:
@@ -325,7 +338,7 @@ func try_technique_attack() -> bool:
 func handle_cast_state() -> void:
 	var input_vec = get_movement_input()
 	if input_vec != Vector2.ZERO:
-		velocity = input_vec * (move_speed * 0.45)
+		velocity = input_vec * (move_speed * attack_move_speed_ratio)
 		facing_direction = input_vec
 		_update_facing_nodes()
 	else:

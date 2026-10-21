@@ -81,3 +81,17 @@ extends Resource
 
 ## Ngộ Đạo: tỉ lệ tăng trưởng chi phí nâng cấp
 @export var cost_growth: float = 1.35
+
+## Tỉ lệ vận tốc di chuyển khi người chơi ra đòn (trạng thái ATTACK / CAST)
+@export var attack_move_speed_ratio: float = 0.45
+
+## Thời gian đòn cơ bản của người chơi (ticks)
+@export var player_basic_windup_ticks: int = 6
+@export var player_basic_active_ticks: int = 6
+@export var player_basic_recovery_ticks: int = 12
+
+## Thời gian công pháp của người chơi (ticks)
+@export var player_cast_windup_ticks: int = 10
+@export var player_cast_active_ticks: int = 8
+@export var player_cast_recovery_ticks: int = 12
+@export var player_cast_cooldown_ticks: int = 120

@@ -332,6 +332,25 @@ func test_f3_combat_config_resource_loading() -> void:
 	player.free()
 	enemy.free()
 
+func test_f4_no_hardcoded_numbers_and_attack_speed_ratio() -> void:
+	var player = PlayerController.new()
+	player._ready()
+	
+	# Kiểm tra cấu hình tỉ lệ di chuyển khi đánh
+	assert_eq(player.combat_config.attack_move_speed_ratio, 0.45, "Config attack_move_speed_ratio must be 0.45")
+	assert_eq(player.attack_move_speed_ratio, 0.45, "Player attack_move_speed_ratio must match config")
+	
+	# Kiểm tra cấu hình thời gian đòn đánh
+	assert_eq(player.basic_windup_ticks, player.combat_config.player_basic_windup_ticks, "Basic windup ticks must match config")
+	assert_eq(player.basic_active_ticks, player.combat_config.player_basic_active_ticks, "Basic active ticks must match config")
+	assert_eq(player.basic_recovery_ticks, player.combat_config.player_basic_recovery_ticks, "Basic recovery ticks must match config")
+	assert_eq(player.cast_windup_ticks, player.combat_config.player_cast_windup_ticks, "Cast windup ticks must match config")
+	assert_eq(player.cast_active_ticks, player.combat_config.player_cast_active_ticks, "Cast active ticks must match config")
+	assert_eq(player.cast_recovery_ticks, player.combat_config.player_cast_recovery_ticks, "Cast recovery ticks must match config")
+	assert_eq(player.cast_cooldown_ticks, player.combat_config.player_cast_cooldown_ticks, "Cast cooldown ticks must match config")
+	
+	player.free()
+
 
 
 

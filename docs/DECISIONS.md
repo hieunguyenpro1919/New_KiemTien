@@ -166,3 +166,12 @@ Tài liệu ghi lại các quyết định kỹ thuật, thay đổi mặc đị
   - Phản đòn hoàn hảo (`PERFECT_PARRY`) trừ 20% thể lực quái, lập tức hủy đòn quái đang vung, gây choáng 60 ticks (hoặc 120 ticks nếu cạn thể lực), sinh nhãn nổi `Đỡ Hoàn Hảo!` trên người chơi và `-20 Thể Lực` trên quái vật.
   - *Kết quả test:* 38/38 tests passed (100% xanh).
 
+---
+
+## 8. Quyết định Khắc phục Lỗi Kỹ thuật F1 - F4 (Claude Review)
+
+- **Triệt tiêu số cứng trong mã nguồn (F4) & Hệ số tốc độ khi đánh (0.45):**
+  - *Giá trị:* `attack_move_speed_ratio = 0.45` (45% `move_speed`, tương đương 99.0 px/s khi vận tốc cơ sở là 220 px/s).
+  - *Lý do:* Tạo cảm giác lướt chém uyển chuyển trong lúc ra đòn (trạng thái `ATTACK` và `CAST`), tránh đơ cứng nhân vật khi bấm phím di chuyển, nhưng không cho phép di chuyển với tốc độ tối đa (100%) để tránh mất tính cam kết của hoạt ảnh đòn đánh.
+  - *Cấu hình hóa:* Đã chuyển toàn bộ hệ số 0.45 và các thông số thời gian đòn đánh của người chơi (`player_basic_windup_ticks = 6`, `player_basic_active_ticks = 6`, `player_basic_recovery_ticks = 12`, `player_cast_windup_ticks = 10`, `player_cast_active_ticks = 8`, `player_cast_recovery_ticks = 12`, `player_cast_cooldown_ticks = 120`) vào Resource `CombatConfig` (`combat_config.gd` và `combat_config.tres`). `PlayerController` tự động đồng bộ từ Resource cấu hình khi khởi tạo, loại bỏ triệt để số cứng trong mã nguồn theo Quy tắc 2 của `AGENT_RULES.md`.
+
