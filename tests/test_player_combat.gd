@@ -221,21 +221,31 @@ func test_f1_physical_hitbox_damage_sync_with_golden_tests() -> void:
 	var player_scene = load("res://scenes/player.tscn")
 	var enemy_scene = load("res://scenes/enemy.tscn")
 	
-	# --- Phần 1: Công pháp cấp 3 vs Quái 2 = 300 (G4) ---
+	# --- Phần 0: Công pháp cấp 3 vs Quái 1 = 545 (G3) ---
 	var player = player_scene.instantiate()
-	player.force_crit = -1 # Tắt chí mạng để khớp G4 chuẩn
+	player.force_crit = -1 # Tắt chí mạng để khớp G3 & G4 chuẩn
 	player._ready()
 	
+	var enemy1 = enemy_scene.instantiate()
+	enemy1.enemy_data = load("res://data/enemies/enemy_1.tres")
+	enemy1._ready()
+	enemy1.stats.max_hp = 1000
+	enemy1.stats.current_hp = 1000
+	
+	var tech_hitbox = player.get_node("HitboxPivot/TechniqueHitbox") as Hitbox
+	var enemy1_hurtbox = enemy1.get_node("Hurtbox") as Hurtbox
+	
+	player._enable_technique_hitbox()
+	enemy1_hurtbox.check_hit(tech_hitbox)
+	assert_eq(enemy1.stats.current_hp, 1000 - 545, "F1: Công pháp cấp 3 vs Quái 1 qua Hitbox phải nhận đúng 545 sát thương (G3)")
+	enemy1.free()
+	
+	# --- Phần 1: Công pháp cấp 3 vs Quái 2 = 300 (G4) ---
 	var enemy2 = enemy_scene.instantiate()
 	enemy2.enemy_data = load("res://data/enemies/enemy_2.tres")
 	enemy2._ready()
 	
-	var tech_hitbox = player.get_node("HitboxPivot/TechniqueHitbox") as Hitbox
 	var enemy2_hurtbox = enemy2.get_node("Hurtbox") as Hurtbox
-	
-	# Bật hitbox công pháp của player
-	player._enable_technique_hitbox()
-	# Gây va chạm vật lý qua Area2D
 	enemy2_hurtbox.check_hit(tech_hitbox)
 	
 	assert_eq(enemy2.stats.current_hp, 3000 - 300, "F1: Công pháp cấp 3 vs Quái 2 qua Hitbox phải nhận đúng 300 sát thương (G4)")
@@ -336,9 +346,10 @@ func test_f4_no_hardcoded_numbers_and_attack_speed_ratio() -> void:
 	var player = PlayerController.new()
 	player._ready()
 	
-	# Kiểm tra cấu hình tỉ lệ di chuyển khi đánh
+	# Kiểm tra cấu hình tỉ lệ di chuyển khi đánh (đọc từ duy nhất một nguồn sự thật CombatConfig)
 	assert_eq(player.combat_config.attack_move_speed_ratio, 0.45, "Config attack_move_speed_ratio must be 0.45")
-	assert_eq(player.attack_move_speed_ratio, 0.45, "Player attack_move_speed_ratio must match config")
+	assert_eq(player.get_attack_move_speed_ratio(), 0.45, "get_attack_move_speed_ratio must read directly from config")
+	assert_false("attack_move_speed_ratio" in player, "PlayerController must not duplicate attack_move_speed_ratio")
 	
 	# Kiểm tra cấu hình thời gian đòn đánh
 	assert_eq(player.basic_windup_ticks, player.combat_config.player_basic_windup_ticks, "Basic windup ticks must match config")

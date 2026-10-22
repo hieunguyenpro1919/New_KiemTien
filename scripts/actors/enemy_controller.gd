@@ -326,8 +326,8 @@ func _on_hurtbox_hit_received(hitbox: Hitbox) -> void:
 		hitbox.armor_pen_flat
 	)
 	var actual_dmg = stats.take_damage(res.final)
-	if is_inside_tree() and get_parent() != null and actual_dmg > 0:
-		var is_crit = hitbox.is_crit or (hitbox.raw_damage > 500.0)
+	if get_parent() != null and actual_dmg > 0:
+		var is_crit = hitbox.is_crit
 		var col = Color(1.0, 0.85, 0.2) if is_crit else Color.WHITE
 		FloatingNumber.spawn(get_parent(), global_position + Vector2(0, -28), "-%d" % actual_dmg, col, is_crit)
 		

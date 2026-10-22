@@ -232,3 +232,55 @@ func test_golden_b7_via_collision_and_receive_hit_pipeline() -> void:
 	player.free()
 	enemy.free()
 
+func test_enemy_crit_visual_depends_only_on_hitbox_is_crit() -> void:
+	var tree = Engine.get_main_loop() as SceneTree
+	var dummy_root = Node2D.new()
+	if tree != null and tree.root != null:
+		tree.root.add_child(dummy_root)
+		
+	var enemy_scene = load("res://scenes/enemy.tscn")
+	var enemy = enemy_scene.instantiate()
+	enemy.enemy_data = load("res://data/enemies/enemy_2.tres")
+	dummy_root.add_child(enemy)
+	enemy._ready()
+	
+	var attacker = Node2D.new()
+	var hitbox = Hitbox.new()
+	attacker.add_child(hitbox)
+	dummy_root.add_child(attacker)
+	
+	# 1. Đòn công pháp không chí mạng nhưng raw = 600 > 500:
+	# Phải hiển thị màu trắng (thường), không được tự ý đổi thành chí mạng do số cứng > 500
+	hitbox.init_attack(1, 600.0, 300, attacker, 100.0, 0.0, 3.0, 1.0, false, 0.5)
+	enemy._on_hurtbox_hit_received(hitbox)
+	
+	var floating1: FloatingNumber = null
+	for child in dummy_root.get_children():
+		if child is FloatingNumber:
+			floating1 = child
+			break
+	assert_not_null(floating1, "FloatingNumber should spawn on damage")
+	if floating1 != null:
+		assert_false(floating1.is_critical, "Non-crit attack with raw > 500 must NOT be treated as critical")
+		assert_eq(floating1.text_color, Color.WHITE, "Non-crit text color must be WHITE")
+		floating1.free()
+	
+	# 2. Đòn chí mạng thực sự với cờ is_crit = true (kể cả raw nhỏ = 150 < 500):
+	hitbox.init_attack(2, 150.0, 100, attacker, 100.0, 0.0, 1.0, 0.0, true, 0.5)
+	enemy._on_hurtbox_hit_received(hitbox)
+	
+	var floating2: FloatingNumber = null
+	for child in dummy_root.get_children():
+		if child is FloatingNumber:
+			floating2 = child
+			break
+	assert_not_null(floating2, "FloatingNumber should spawn on crit damage")
+	if floating2 != null:
+		assert_true(floating2.is_critical, "Attack with hitbox.is_crit = true MUST be treated as critical")
+		assert_eq(floating2.text_color, Color(1.0, 0.85, 0.2), "Crit text color must be golden yellow")
+		floating2.free()
+	
+	attacker.free()
+	enemy.free()
+	dummy_root.free()
+

@@ -143,14 +143,15 @@ Tài liệu theo dõi trạng thái thực thi của từng Milestone theo quy t
   - `test_hitbox_hurtbox_collision_integration`: Kiểm tra chuẩn hóa Layer/Mask và luồng va chạm gây sát thương.
 - [x] Toàn bộ 38/38 tests trong test runner đạt 100% xanh.
 
-### Gói lỗi kỹ thuật F1 - F7 (Claude Review):
-- [x] [F1 - Nghiêm trọng] Đồng bộ sát thương game thật với Ca kiểm thử vàng: Hitbox mang đầy đủ `atk_base`, `atk_bonus`, `level_coef`, `skill_bonus_pct`, `is_crit`, `crit_bonus`, `armor_pen_pct`, `armor_pen_flat`. Viết test tích hợp vật lý thật đảm bảo: Công pháp cấp 3 vs Quái 2 = 300, Đòn nặng Quái 2 vs Người chơi = 889.
-- [x] [F2 - Nghiêm trọng] Tích hợp Chí mạng (RNG) thực sự vào game: Seed nạp từ `CombatConfig.rng_seed`, in log console, tỉ lệ `player_crit_rate` (10%), hỗ trợ cờ ép bật/tắt `force_crit`.
+### Gói lỗi kỹ thuật F1 - F7 (Claude Review & Chủ Dự Án Duyệt Q1):
+- [x] [Q1 & Tài liệu] Chủ Dự Án phê duyệt Q1 chọn Cách A theo đúng SPEC 3.2: Mitigation dùng `base = atk_base + atk_bonus`. Ghi nhận chính thức vào `docs/DECISIONS.md`. Sửa nhãn: Công pháp cấp 3 vs Quái 1 là G3 = 545; Công pháp cấp 3 vs Quái 2 là G4 = 300 (sửa nhầm lẫn ghi G3=300 trước đó); Đòn nặng Quái 2 vs Người chơi là G7 = 889.
+- [x] [F1 - Nghiêm trọng] Đồng bộ sát thương game thật với Ca kiểm thử vàng: Hitbox mang đầy đủ `atk_base`, `atk_bonus`, `level_coef`, `skill_bonus_pct`, `is_crit`, `crit_bonus`, `armor_pen_pct`, `armor_pen_flat`. Viết test tích hợp vật lý thật đảm bảo: Công pháp cấp 3 vs Quái 1 là G3 = 545, Công pháp cấp 3 vs Quái 2 là G4 = 300, Đòn nặng Quái 2 vs Người chơi là G7 = 889.
+- [x] [F2 - Nghiêm trọng] Tích hợp Chí mạng (RNG) thực sự vào game: Seed nạp từ `CombatConfig.rng_seed`, in log console, tỉ lệ `player_crit_rate` (10%), hỗ trợ cờ ép bật/tắt `force_crit`. Xóa bỏ hoàn toàn điều kiện kiểm tra cứng `raw_damage > 500.0` tại `enemy_controller.gd:330`, hiển thị chữ nổi chí mạng dựa 100% vào cờ `hitbox.is_crit`.
 - [x] [F3 - Quan trọng] Nạp Resource `CombatConfig.tres` thực sự vào `PlayerController` và `EnemyController`, truyền trực tiếp vào `compute_block_threshold` và `evaluate_block`.
-- [x] [F4 - Quan trọng] Triệt tiêu số cứng trong mã nguồn: Đưa attack timings và hệ số tốc độ khi đánh (0.45) vào `CombatConfig`, ghi nhận vào `docs/DECISIONS.md`.
+- [x] [F4 - Quan trọng] Triệt tiêu số cứng trong mã nguồn: Đưa attack timings và hệ số tốc độ khi đánh (0.45) vào `CombatConfig`. Xóa bỏ số cứng `enemy_stamina = 100.0` tại `player_controller.gd:135` (thay bằng đọc động từ `enemy.stats.max_stamina`), gom `attack_move_speed_ratio` về một nguồn sự thật duy nhất từ `combat_config`, không khai báo biến trùng lặp.
 - [x] [F5 - Quan trọng] Cấu hình chuẩn `project.godot`: Bổ sung tường minh `common/physics_ticks_per_second=60` dưới mục `[physics]`.
 - [x] [F6 - Quan trọng] Nâng cấp bộ ca kiểm thử tích hợp: Bổ sung test B7 đi qua đường va chạm thực tế Hitbox -> Hurtbox -> receive_hit; thêm kịch bản kiểm chứng tính xác định `combat_scenario_02_parry_and_heavy.json` có đầy đủ Đỡ hoàn hảo và Đòn nặng.
-- [x] [F7 - Nhỏ] Dọn dẹp logic dư thừa trong `DamageResolver`: Chuẩn hóa 2 nhánh `level_coef_mode` ("linear", "sqrt"), liên kết các biến cấu hình `perfect_parry_damage_reduction`, `failed_block_damage_pct`.
-- [x] Toàn bộ 45/45 tests trong test runner đạt 100% xanh.
+- [x] [F7 - Nhỏ] Dọn dẹp logic và liên kết thực sự 2 trường cấu hình trong `CombatConfig`: `perfect_parry_damage_reduction` và `failed_block_damage_pct` được áp dụng trực tiếp vào luồng tính sát thương của `DamageResolver.evaluate_block`.
+- [x] Toàn bộ 46/46 tests trong test runner đạt 100% xanh.
 
 
